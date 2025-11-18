@@ -1,0 +1,11 @@
+{
+  "type": "commonjs",
+  "dependencies": {
+    "@neondatabase/serverless": "^0.9.5",
+    "@supabase/supabase-js": "^2.58.0",
+    "axios": "^1.12.2",
+    "fs-extra": "^11.3.2",
+    "jsonwebtoken": "^9.0.0",
+    "sharp": "^0.34.4"
+  }
+}
