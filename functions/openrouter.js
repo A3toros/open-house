@@ -1,7 +1,7 @@
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args))
 const crypto = require('crypto')
 const { getSql } = require('./db')
-const { getModelForActivity } = require('../src/services/modelConfig')
+const { getModelForActivity } = require('./modelConfig')
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
 const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1'

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { motion } from 'framer-motion'
 import { ActivityLayout } from '../ActivityLayout'
 import { apiClient } from '../../services/apiClient'
 import { useClearLocalStorage } from '../../hooks/useClearLocalStorage'
@@ -6,8 +7,11 @@ import { useClearLocalStorage } from '../../hooks/useClearLocalStorage'
 const PhotoBooth = () => {
   useClearLocalStorage(['photo-booth-storage'])
   const [profession, setProfession] = useState('Space Chef')
+  const [style, setStyle] = useState('Studio Portrait')
   const [imageUrl, setImageUrl] = useState<string>()
   const [styledUrl, setStyledUrl] = useState<string>()
+  const [styleMeta, setStyleMeta] = useState<{ palette?: string; lighting?: string; caption?: string }>()
+  const [isGenerating, setIsGenerating] = useState(false)
   const [cameraReady, setCameraReady] = useState(false)
   const [cameraError, setCameraError] = useState<string>()
   const videoRef = useRef<HTMLVideoElement | null>(null)
@@ -46,6 +50,11 @@ const PhotoBooth = () => {
       return
     }
 
+    setIsGenerating(true)
+    setCameraError(undefined)
+    setStyledUrl(undefined)
+    setStyleMeta(undefined)
+
     try {
       const response = await apiClient.post<{
         styledImageUrl: string
@@ -53,11 +62,15 @@ const PhotoBooth = () => {
       }>('/photo-booth', {
         photoDataUrl: imageUrl,
         profession,
+        style,
       })
 
       setStyledUrl(response.styledImageUrl)
+      setStyleMeta(response.styleMeta)
     } catch (error) {
       setCameraError((error as Error).message)
+    } finally {
+      setIsGenerating(false)
     }
   }
 
@@ -108,17 +121,37 @@ const PhotoBooth = () => {
             </label>
             <p className="text-sm text-white/70">Style options</p>
             <div className="flex flex-wrap gap-2 text-xs">
-              {['Comic-Book', 'Neon Glow', 'Studio Portrait', 'Futuristic'].map((style) => (
-                <span key={style} className="rounded-full border border-white/20 px-3 py-1 text-white/70">
-                  {style}
-                </span>
+              {['Comic-Book', 'Neon Glow', 'Studio Portrait'].map((styleOption) => (
+                <button
+                  key={styleOption}
+                  onClick={() => setStyle(styleOption)}
+                  className={`rounded-full border px-3 py-1 transition ${
+                    style === styleOption
+                      ? 'border-primary bg-primary/20 text-white'
+                      : 'border-white/20 bg-white/5 text-white/70 hover:border-white/60'
+                  }`}
+                >
+                  {styleOption}
+                </button>
               ))}
             </div>
             <button
               onClick={handleGenerate}
-              className="w-full rounded-xl bg-accent px-6 py-3 font-semibold text-white transition hover:bg-accent/90"
+              disabled={isGenerating}
+              className="w-full rounded-xl bg-accent px-6 py-3 font-semibold text-white transition hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              Generate Portrait
+              {isGenerating ? (
+                <>
+                  <motion.span
+                    className="h-4 w-4 rounded-full border-2 border-white/40 border-t-white"
+                    animate={{ rotate: 360 }}
+                    transition={{ repeat: Infinity, ease: 'linear', duration: 0.8 }}
+                  />
+                  Generating...
+                </>
+              ) : (
+                'Generate Portrait'
+              )}
             </button>
           </div>
         </div>
@@ -138,13 +171,29 @@ const PhotoBooth = () => {
             </div>
           )}
 
-          {styledUrl && (
+          {isGenerating && (
+            <div className="space-y-2 rounded-2xl border border-white/10 bg-midnight/40 p-4 flex flex-col items-center justify-center min-h-[200px]">
+              <motion.span
+                className="h-12 w-12 rounded-full border-4 border-white/20 border-t-primary"
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, ease: 'linear', duration: 1 }}
+              />
+              <p className="text-sm text-white/70 mt-4">Generating your AI-enhanced portrait...</p>
+              <p className="text-xs text-white/50">This may take a few moments</p>
+            </div>
+          )}
+
+          {styledUrl && !isGenerating && (
             <div className="space-y-2 rounded-2xl border border-primary/40 bg-primary/10 p-4">
               <p className="text-sm text-white/60">AI-enhanced portrait</p>
               <img src={styledUrl} alt="AI Portrait" className="w-full rounded-xl border border-white/10 object-cover" />
-              <div className="text-xs text-white/70">
-                Sentiment: confident • Lighting: cinematic • Palette: vibrant blues + oranges
-              </div>
+              {styleMeta && (
+                <div className="text-xs text-white/70">
+                  {styleMeta.caption && <span>{styleMeta.caption}</span>}
+                  {styleMeta.lighting && <span> • Lighting: {styleMeta.lighting}</span>}
+                  {styleMeta.palette && <span> • Palette: {styleMeta.palette}</span>}
+                </div>
+              )}
             </div>
           )}
         </div>

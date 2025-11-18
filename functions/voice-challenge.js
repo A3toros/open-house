@@ -86,24 +86,25 @@ Transcript: """${transcriptResult.text}"""`,
         ${sessionId},
         ${analysis.profession_en || null},
         ${analysis.profession_th || null},
-        ${JSON.stringify(analysis.suggestions || [])},
+        ${JSON.stringify([])},
         ${JSON.stringify({
-          compliment: analysis.compliment,
-          summary_en: analysis.summary_en,
-          summary_th: analysis.summary_th,
+          compliment: analysis.compliment || 'Great!',
+          reason_en: analysis.reason_en || null,
+          reason_th: analysis.reason_th || null,
         })},
-        ${analysis.score || 0}
+        ${null}
       )
     `
 
     await logEvent(sessionId, 'voice-challenge', 'analysis', {
       visitorId,
-      score: analysis.score,
+      profession_en: analysis.profession_en,
+      profession_th: analysis.profession_th,
     })
 
     debug.log('Analysis ready', {
-      score: analysis.score,
-      suggestionsCount: Array.isArray(analysis.suggestions) ? analysis.suggestions.length : 0,
+      profession_en: analysis.profession_en,
+      profession_th: analysis.profession_th,
     })
 
     return ok(

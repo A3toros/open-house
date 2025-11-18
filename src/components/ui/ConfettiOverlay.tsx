@@ -10,12 +10,10 @@ const ConfettiOverlay = () => {
   const [engineReady, setEngineReady] = useState(false)
 
   useEffect(() => {
-    console.log('[ConfettiOverlay] initializing particles engine')
     initParticlesEngine(async (engine) => {
       await loadSlim(engine)
     })
       .then(() => {
-        console.log('[ConfettiOverlay] engine ready')
         setEngineReady(true)
       })
       .catch((error) => {
@@ -25,18 +23,18 @@ const ConfettiOverlay = () => {
 
   useEffect(() => {
     const handler = () => {
-      console.log('[ConfettiOverlay] received confetti event')
+      // Always set visible when event fires, even if engine not ready yet
+      // The component will render once engine is ready
       setVisible(true)
       setBurstKey((prev) => prev + 1)
       if (timeoutRef.current) window.clearTimeout(timeoutRef.current)
-      timeoutRef.current = window.setTimeout(() => setVisible(false), 2500)
+      // Keep visible longer to ensure confetti plays fully
+      timeoutRef.current = window.setTimeout(() => setVisible(false), 3000)
     }
 
     window.addEventListener(CONFETTI_EVENT_NAME, handler as EventListener)
-    console.log('[ConfettiOverlay] listener attached')
     return () => {
       window.removeEventListener(CONFETTI_EVENT_NAME, handler as EventListener)
-      console.log('[ConfettiOverlay] listener removed')
       if (timeoutRef.current) window.clearTimeout(timeoutRef.current)
     }
   }, [])
@@ -85,24 +83,26 @@ const ConfettiOverlay = () => {
         },
       },
       emitters: {
-        life: { duration: 0.25, count: 1 },
+        life: { duration: 0.3, count: 1 },
         rate: {
-          delay: 0.15,
-          quantity: 25,
+          delay: 0,
+          quantity: 30,
         },
-        position: { x: 50, y: 100 },
-        size: { width: 0, height: 0 },
+        position: { x: 50, y: 50 },
+        size: { width: 100, height: 0 },
+        particles: {
+          move: {
+            angle: { value: 270, offset: { min: -30, max: 30 } },
+          },
+        },
       },
     }),
     [],
   )
 
+  // Only render when both visible and engine is ready
+  // If visible is true but engine not ready, wait for engine
   if (!visible || !engineReady) {
-    if (!engineReady) {
-      console.log('[ConfettiOverlay] engine not ready, skipping render')
-    } else {
-      console.log('[ConfettiOverlay] not visible, skipping render')
-    }
     return null
   }
 

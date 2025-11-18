@@ -8,15 +8,19 @@ export const ActivityLayout = ({ title, subtitle, children }: PropsWithChildren<
 
   return (
     <section className="space-y-6 rounded-3xl border border-white/10 bg-white/5 p-8">
-      <header className="space-y-2">
+      <header className="space-y-2 relative">
         <p className="text-sm uppercase tracking-[0.4em] text-sky">{profile.locale.toUpperCase()}</p>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="font-display text-3xl text-white">{title}</h2>
-          <Link to="/" className="text-sm text-white/60 underline-offset-4 hover:text-white hover:underline">
-            ← Back to activity list
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <Link to="/" className="flex-shrink-0 hover:opacity-80 transition-opacity absolute left-0">
+            <img
+              src="/pics/arrow-back.png"
+              alt="Back to activity list"
+              className="h-8 w-8"
+            />
           </Link>
+          <h2 className="font-display text-3xl text-white">{title}</h2>
         </div>
-        <p className="text-white/70">{subtitle}</p>
+        <p className="text-white/70 text-center">{subtitle}</p>
       </header>
 
       <motion.div layout className="space-y-4">

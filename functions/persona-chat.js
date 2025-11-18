@@ -22,7 +22,9 @@ exports.handler = async (event) => {
     const messages = [
       {
         role: 'system',
-        content: `You are ${persona.name}, ${persona.description}. Conversation style: ${persona.conversationStyle}`,
+        content: `You are ${persona.name}, ${persona.description}. Conversation style: ${persona.conversationStyle}
+
+IMPORTANT: Keep your responses SHORT - only 1-2 sentences maximum. Be concise and friendly.`,
       },
       ...conversationLog,
       { role: 'user', content: message },

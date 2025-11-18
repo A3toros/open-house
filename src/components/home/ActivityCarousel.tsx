@@ -56,7 +56,7 @@ export const ActivityCarousel = ({ items }: ActivityCarouselProps) => {
               <p className="text-xs uppercase tracking-[0.4em] text-sky">Featured activity</p>
               <h3 className="font-display text-3xl text-white">{active.title}</h3>
               <p className="text-base text-white/70">{active.description}</p>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap justify-center gap-3">
                 <Link
                   to={`/activity/${active.slug}`}
                   className="rounded-full bg-primary px-6 py-2 text-sm font-semibold uppercase tracking-wide text-white"

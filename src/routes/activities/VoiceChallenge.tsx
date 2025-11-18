@@ -28,7 +28,7 @@ const VoiceChallenge = () => {
   const [errorMessage, setErrorMessage] = useState<string>()
   const [analysis, setAnalysis] = useState<VoiceAnalysis | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [celebrationStage, setCelebrationStage] = useState<'idle' | 'congrats' | 'praise' | 'done'>('idle')
+  const [celebrationStage, setCelebrationStage] = useState<'idle' | 'praise' | 'done'>('idle')
   const [praiseWord, setPraiseWord] = useState('')
   const timers = useRef<number[]>([])
 
@@ -40,17 +40,12 @@ const VoiceChallenge = () => {
   const startCelebration = useCallback(() => {
     clearTimers()
     setPraiseWord(praiseWords[Math.floor(Math.random() * praiseWords.length)])
-    setCelebrationStage('congrats')
+    setCelebrationStage('praise')
     fire()
     timers.current.push(
       window.setTimeout(() => {
-        setCelebrationStage('praise')
-      }, 1100),
-    )
-    timers.current.push(
-      window.setTimeout(() => {
         setCelebrationStage('done')
-      }, 2300),
+      }, 2000),
     )
   }, [fire])
 
@@ -131,34 +126,35 @@ const VoiceChallenge = () => {
         </div>
 
         <AnimatePresence mode="wait">
-          {celebrationStage !== 'idle' && (
+          {celebrationStage === 'praise' && (
             <motion.div
-              key={celebrationStage}
-              initial={{ opacity: 0, scale: 0.9, y: 40 }}
+              key="praise"
+              initial={{ opacity: 0, scale: 0.5, y: 50 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.8, y: -20 }}
-              transition={{ duration: 0.35 }}
-              className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-6 text-center text-white"
+              exit={{ opacity: 0, scale: 0.8, y: -30 }}
+              transition={{
+                type: 'spring',
+                stiffness: 200,
+                damping: 20,
+                duration: 0.6,
+              }}
+              className="rounded-2xl border border-white/10 bg-white/5 p-8 text-center"
             >
-              {celebrationStage === 'congrats' && (
-                <motion.p
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.35 }}
-                  className="text-4xl font-display"
-                >
-                  Congradulations!
-                </motion.p>
-              )}
-              {celebrationStage === 'praise' && (
-                <motion.p
-                  initial={{ opacity: 0, scale: 0.85 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="text-5xl font-display"
-                >
-                  {praiseWord || 'Great!'}
-                </motion.p>
-              )}
+              <motion.p
+                key={praiseWord}
+                initial={{ opacity: 0, scale: 0.3, rotate: -10 }}
+                animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                exit={{ opacity: 0, scale: 0.5 }}
+                transition={{
+                  type: 'spring',
+                  stiffness: 300,
+                  damping: 25,
+                  duration: 0.5,
+                }}
+                className="text-6xl font-display text-white"
+              >
+                {praiseWord || 'Great!'}
+              </motion.p>
             </motion.div>
           )}
         </AnimatePresence>
