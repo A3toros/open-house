@@ -1,5 +1,4 @@
-import VoiceChallenge from './VoiceChallenge'
-import PhotoBooth from './PhotoBooth'
+import FutureProfession from './FutureProfession'
 import StoryForge from './StoryForge'
 import CultureTranslator from './CultureTranslator'
 import EscapeMission from './EscapeMission'
@@ -10,16 +9,10 @@ import ParentCorner from './ParentCorner'
 
 export const activities = [
   {
-    slug: 'voice-challenge',
-    title: 'AI Voice Challenge',
-    description: 'Record a short self-intro and receive bilingual career predictions with instant confetti feedback.',
-    component: VoiceChallenge,
-  },
-  {
-    slug: 'photo-booth',
-    title: 'AI Photo Booth',
-    description: 'Snap a photo, pick a future job, and let image generation style your portrait for printing or email.',
-    component: PhotoBooth,
+    slug: 'future-profession',
+    title: 'Future Profession',
+    description: 'Record a bilingual intro to get an AI career prediction and generate a matching portrait.',
+    component: FutureProfession,
   },
   {
     slug: 'story-forge',
