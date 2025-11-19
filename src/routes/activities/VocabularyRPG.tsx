@@ -422,31 +422,16 @@ const VocabularyRPG = () => {
             >
               {isLoading ? '🤔 Thinking...' : '🚀 Submit My Guess!'}
             </motion.button>
-            <div className="flex gap-3 mt-3">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={fetchNextCard}
-                className="flex-1 rounded-xl bg-[#9B5BFF]/20 border-2 border-[#9B5BFF]/50 px-4 py-3 font-semibold text-[#9B5BFF] hover:bg-[#9B5BFF]/30 hover:shadow-[0_0_20px_rgba(155,91,255,0.5)] transition disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ textShadow: '0 0 8px rgba(155, 91, 255, 0.6)' }}
-                disabled={isLoading || isTranscribing}
-              >
-                ⏭️ Skip Word
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => {
-                  setGameOver(true)
-                  setGameStarted(false)
-                }}
-                className="flex-1 rounded-xl bg-[#FF6B6B]/20 border-2 border-[#FF6B6B]/50 px-4 py-3 font-semibold text-[#FF6B6B] hover:bg-[#FF6B6B]/30 hover:shadow-[0_0_20px_rgba(255,107,107,0.5)] transition disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ textShadow: '0 0 8px rgba(255, 107, 107, 0.6)' }}
-                disabled={isLoading || isTranscribing}
-              >
-                🛑 End Game
-              </motion.button>
-            </div>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={fetchNextCard}
+              className="w-full mt-3 rounded-xl bg-[#9B5BFF]/20 border-2 border-[#9B5BFF]/50 px-4 py-3 font-semibold text-[#9B5BFF] hover:bg-[#9B5BFF]/30 hover:shadow-[0_0_20px_rgba(155,91,255,0.5)] transition disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ textShadow: '0 0 8px rgba(155, 91, 255, 0.6)' }}
+              disabled={isLoading || isTranscribing}
+            >
+              ⏭️ Skip Word
+            </motion.button>
           </>
         )}
         {errorMessage && (
@@ -539,6 +524,21 @@ const VocabularyRPG = () => {
               ))}
             </ul>
           </motion.div>
+        )}
+        {gameStarted && !gameOver && !gameWon && (
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => {
+              setGameOver(true)
+              setGameStarted(false)
+            }}
+            className="w-full mt-4 rounded-xl bg-[#FF6B6B]/20 border-2 border-[#FF6B6B]/50 px-6 py-4 font-semibold text-[#FF6B6B] hover:bg-[#FF6B6B]/30 hover:shadow-[0_0_20px_rgba(255,107,107,0.5)] transition disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ textShadow: '0 0 8px rgba(255, 107, 107, 0.6)' }}
+            disabled={isLoading || isTranscribing}
+          >
+            🛑 End Game
+          </motion.button>
         )}
       </motion.div>
     </ActivityLayout>

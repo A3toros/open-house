@@ -1,7 +1,7 @@
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args))
 const crypto = require('crypto')
 const { getSql } = require('./db')
-const { getModelForActivity } = require('./modelConfig.js')
+const { getModelForActivity } = require('./modelConfig')
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
 const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1'
@@ -14,23 +14,33 @@ const hashPayload = (payload) =>
   crypto.createHash('sha256').update(JSON.stringify(payload)).digest('hex')
 
 const getCacheEntry = async (requestHash) => {
-  const sql = getSql()
-  const rows = await sql`
-    SELECT payload, created_at
-    FROM ai_cache
-    WHERE request_hash = ${requestHash}
-      AND created_at > now() - interval '30 minutes'
-  `
-  return rows[0]
+  try {
+    const sql = getSql()
+    const rows = await sql`
+      SELECT payload, created_at
+      FROM ai_cache
+      WHERE request_hash = ${requestHash}
+        AND created_at > now() - interval '30 minutes'
+    `
+    return rows[0]
+  } catch (error) {
+    console.error('Cache get error (non-fatal):', error.message)
+    return null // Return null on cache error, function will continue without cache
+  }
 }
 
 const setCacheEntry = async (requestHash, activitySlug, payload) => {
-  const sql = getSql()
-  await sql`
-    INSERT INTO ai_cache (request_hash, activity_slug, payload)
-    VALUES (${requestHash}, ${activitySlug}, ${JSON.stringify(payload)})
-    ON CONFLICT (request_hash) DO UPDATE SET payload = ${JSON.stringify(payload)}, created_at = now()
-  `
+  try {
+    const sql = getSql()
+    await sql`
+      INSERT INTO ai_cache (request_hash, activity_slug, payload)
+      VALUES (${requestHash}, ${activitySlug}, ${JSON.stringify(payload)})
+      ON CONFLICT (request_hash) DO UPDATE SET payload = ${JSON.stringify(payload)}, created_at = now()
+    `
+  } catch (error) {
+    console.error('Cache set error (non-fatal):', error.message)
+    // Don't throw - cache is optional, function should continue
+  }
 }
 
 async function chatCompletion(payload, options = {}) {
