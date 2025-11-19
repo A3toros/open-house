@@ -1,7 +1,6 @@
 const { ok, badRequest, serverError } = require('./response')
 const { chatCompletion } = require('./openrouter')
 const { getSql, logEvent } = require('./db')
-const { nanoid } = require('nanoid')
 
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return ok()
