@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { ActivityLayout } from '../ActivityLayout'
 import { apiClient } from '../../services/apiClient'
 import { useRecorder } from '../../hooks/useRecorder'
@@ -9,8 +9,9 @@ import { useClearLocalStorage } from '../../hooks/useClearLocalStorage'
 
 type CultureMatch = {
   global: string
-  explanation: string
-  takeaway?: string
+  country?: string
+  place?: string
+  whatPeopleDo?: string
   narration?: string
 }
 
@@ -24,10 +25,31 @@ const CultureTranslator = () => {
     Array<{ thai: string; global: string; takeaway: string; timestamp: string }>
   >([])
   const [isPlaying, setIsPlaying] = useState(false)
+  const [isSearching, setIsSearching] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string>()
   const [audioPayload, setAudioPayload] = useState<string>()
   const [transcript, setTranscript] = useState<string>()
   const narrationRef = useRef<SpeechSynthesisUtterance | null>(null)
+
+  // Get a female voice from available voices
+  const getFemaleVoice = useCallback(() => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return null
+    const availableVoices = window.speechSynthesis.getVoices()
+    // Try to find a female voice (common patterns: 'female', 'woman', or specific voice names)
+    const femaleVoice = availableVoices.find(
+      (voice) =>
+        voice.name.toLowerCase().includes('female') ||
+        voice.name.toLowerCase().includes('woman') ||
+        voice.name.toLowerCase().includes('zira') || // Windows female voice
+        voice.name.toLowerCase().includes('samantha') || // macOS female voice
+        voice.name.toLowerCase().includes('karen') || // macOS female voice
+        voice.name.toLowerCase().includes('susan') || // macOS female voice
+        voice.name.toLowerCase().includes('victoria') || // macOS female voice
+        voice.name.toLowerCase().includes('salli') || // AWS Polly female voice
+        voice.name.toLowerCase().includes('joanna'), // AWS Polly female voice
+    )
+    return femaleVoice || availableVoices.find((v) => v.lang.startsWith('en')) || availableVoices[0]
+  }, [])
 
   useEffect(() => {
     const cached = readLocalJson(HISTORY_KEY, [])
@@ -67,12 +89,15 @@ const CultureTranslator = () => {
       return
     }
     setErrorMessage(undefined)
+    setIsSearching(true)
+    setMatch(undefined)
     try {
       const response = await apiClient.post<{
         match: {
           global_custom: string
-          explanation: string
-          cultural_takeaway?: string
+          country?: string
+          place?: string
+          what_people_do?: string
           narration_script?: string
         }
         transcript?: string
@@ -83,8 +108,9 @@ const CultureTranslator = () => {
 
       const newMatch: CultureMatch = {
         global: response.match.global_custom,
-        explanation: response.match.explanation,
-        takeaway: response.match.cultural_takeaway,
+        country: response.match.country,
+        place: response.match.place,
+        whatPeopleDo: response.match.what_people_do,
         narration: response.match.narration_script,
       }
 
@@ -94,7 +120,7 @@ const CultureTranslator = () => {
         {
           thai: response.transcript || 'Voice clip',
           global: newMatch.global,
-          takeaway: newMatch.takeaway || 'Shared respect for ancestors.',
+          takeaway: 'Similar tradition found',
           timestamp: new Date().toLocaleTimeString(),
         },
         ...prev,
@@ -102,6 +128,8 @@ const CultureTranslator = () => {
       setAudioPayload(undefined)
     } catch (error) {
       setErrorMessage((error as Error).message)
+    } finally {
+      setIsSearching(false)
     }
   }
 
@@ -115,6 +143,18 @@ const CultureTranslator = () => {
     }
     const utterance = new SpeechSynthesisUtterance(match.narration)
     utterance.lang = 'en-US'
+    
+    // Set female voice
+    const femaleVoice = getFemaleVoice()
+    if (femaleVoice) {
+      utterance.voice = femaleVoice
+    }
+    
+    // Set speech properties for natural female voice
+    utterance.rate = 1.0
+    utterance.pitch = 1.0
+    utterance.volume = 1.0
+    
     utterance.onend = () => {
       narrationRef.current = null
       setIsPlaying(false)
@@ -128,21 +168,30 @@ const CultureTranslator = () => {
     <ActivityLayout title="AI Culture Translator" subtitle="Speak about a Thai custom and let AI find a global match.">
       <motion.div
         layout
-        className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-6"
+        className="space-y-4 rounded-2xl border border-[#11E0FF]/30 bg-[#1E2A49] p-6"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
       >
         <motion.div
-          className="rounded-2xl border border-white/10 bg-midnight/50 p-4 text-center text-white/80"
+          className="rounded-2xl border border-white/10 bg-[#1E2A49] p-4 text-center text-white/80"
           layout
         >
           <button
             onClick={handleRecordToggle}
-            className={`mt-4 rounded-full px-6 py-3 text-sm font-semibold ${
-              isRecording ? 'bg-rose-500 text-white' : 'bg-primary text-white'
+            disabled={isSearching}
+            className={`mt-4 rounded-full px-6 py-3 text-sm font-semibold transition ${
+              isSearching
+                ? 'bg-gray-500 text-white cursor-not-allowed opacity-50'
+                : isRecording
+                ? 'bg-rose-500 text-white hover:bg-rose-600'
+                : 'bg-[#11E0FF]/20 border-2 border-[#11E0FF]/50 text-[#11E0FF] hover:bg-[#11E0FF]/30 hover:shadow-[0_0_20px_rgba(17,224,255,0.5)]'
             }`}
           >
-            {isRecording ? 'Tap to finish recording' : 'Tap to start speaking'}
+            {isSearching
+              ? 'Searching...'
+              : isRecording
+              ? 'Tap to finish recording'
+              : 'Tap to start speaking'}
           </button>
           {transcript && (
             <p className="mt-2 rounded-xl bg-white/5 p-2 text-xs text-white/70">
@@ -151,32 +200,75 @@ const CultureTranslator = () => {
           )}
         </motion.div>
         {errorMessage && <p className="text-sm text-rose-300">{errorMessage}</p>}
+        {isSearching && (
+          <motion.div
+            className="flex items-center gap-3 rounded-2xl border border-[#11E0FF]/30 bg-[#11E0FF]/10 p-4"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <motion.span
+              className="h-5 w-5 rounded-full border-2 border-[#11E0FF] border-t-transparent"
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, ease: 'linear', duration: 1 }}
+            />
+            <p className="text-sm font-semibold text-[#11E0FF]" style={{ textShadow: '0 0 8px rgba(17, 224, 255, 0.6)' }}>
+              AI is searching for similar tradition around the world...
+            </p>
+          </motion.div>
+        )}
         {match && (
           <motion.div
-            className="space-y-2 rounded-2xl bg-midnight/50 p-4 text-sm text-white/80"
+            className="space-y-3 rounded-2xl bg-[#1E2A49] p-4 text-sm text-white/80"
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             layout
           >
-            <p className="font-semibold text-white">Similar Tradition</p>
-            <p className="text-lg text-white">{match.global}</p>
-            <p>{match.explanation}</p>
-            {match.takeaway && (
-              <p className="rounded-xl bg-white/5 p-2 text-xs uppercase tracking-[0.3em] text-sky">
-                Shared value: {match.takeaway}
-              </p>
-            )}
+            <p className="font-semibold text-lg text-white">Similar Tradition</p>
+            <div className="space-y-2">
+              <p className="text-xl font-bold text-[#11E0FF]">{match.global}</p>
+              {match.country && (
+                <p className="text-white">
+                  <span className="text-white/60">Country:</span> {match.country}
+                </p>
+              )}
+              {match.place && (
+                <p className="text-white">
+                  <span className="text-white/60">Place:</span> {match.place}
+                </p>
+              )}
+              {match.whatPeopleDo && (
+                <p className="text-white">
+                  <span className="text-white/60">What people do:</span> {match.whatPeopleDo}
+                </p>
+              )}
+            </div>
           </motion.div>
         )}
       </motion.div>
 
-      {history.length > 0 && (
+      {match?.narration && (
         <motion.div
-          className="rounded-2xl border border-white/10 bg-midnight/40 p-4 text-sm text-white/80"
+          className="flex justify-center"
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <p className="text-sm uppercase tracking-[0.35em] text-sky">Recent matches</p>
+          <button
+            onClick={handleNarration}
+            className="rounded-full border-2 border-cyan-400/50 bg-cyan-400/10 px-6 py-3 text-sm font-semibold text-[#11E0FF] transition hover:border-cyan-400 hover:bg-cyan-400/20"
+            style={{ textShadow: '0 0 8px rgba(17, 224, 255, 0.6)' }}
+          >
+            {isPlaying ? '⏸ Stop narration' : '▶ Play narration'}
+          </button>
+        </motion.div>
+      )}
+
+      {history.length > 0 && (
+        <motion.div
+          className="rounded-2xl border border-white/10 bg-[#1C2340] p-4 text-sm text-white/80"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <p className="text-sm uppercase tracking-[0.35em] text-[#11E0FF]">Recent matches</p>
           <div className="mt-3 grid gap-3 md:grid-cols-3">
             {history.map((item) => (
               <div key={`${item.takeaway}-${item.timestamp}`} className="rounded-xl border border-white/10 p-3">
@@ -188,14 +280,6 @@ const CultureTranslator = () => {
             ))}
           </div>
         </motion.div>
-      )}
-      {match?.narration && (
-        <button
-          onClick={handleNarration}
-          className="mt-4 rounded-full border border-white/20 px-4 py-2 text-sm text-white/80 hover:border-white"
-        >
-          {isPlaying ? 'Stop narration' : 'Play narration'}
-        </button>
       )}
     </ActivityLayout>
   )

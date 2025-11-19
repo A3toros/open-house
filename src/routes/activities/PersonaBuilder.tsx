@@ -246,7 +246,7 @@ const PersonaBuilder = () => {
   return (
     <ActivityLayout title="Build Your AI Persona" subtitle="Design an AI friend and chat">
       <motion.div
-        className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-6"
+        className="space-y-4 rounded-2xl border border-[#11E0FF]/30 bg-[#1E2A49] p-6"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
       >
@@ -261,7 +261,7 @@ const PersonaBuilder = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.1 }}
-              className="text-sm uppercase tracking-[0.4em] text-sky mb-4 text-center"
+              className="text-sm uppercase tracking-[0.4em] text-[#11E0FF] mb-4 text-center"
             >
               Personality
             </motion.p>
@@ -281,14 +281,14 @@ const PersonaBuilder = () => {
                   className="relative"
                 >
                   <motion.span
-                    className="text-lg font-bold text-primary capitalize px-3 py-1 rounded-lg bg-primary/10 border border-primary/30"
+                    className="text-lg font-bold text-[#11E0FF] capitalize px-3 py-1 rounded-lg bg-[#11E0FF]/10 border border-[#11E0FF]/30"
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
                   >
                     {personalityOptions[personality]}
                   </motion.span>
                   <motion.div
-                    className="absolute inset-0 rounded-lg bg-primary/20 blur-xl -z-10"
+                    className="absolute inset-0 rounded-lg bg-[#11E0FF]/20 blur-xl -z-10"
                     animate={{ 
                       opacity: [0.3, 0.6, 0.3],
                       scale: [1, 1.2, 1]
@@ -306,12 +306,12 @@ const PersonaBuilder = () => {
                   className="absolute inset-x-2 h-4 bg-white/10 rounded-full"
                   initial={false}
                   animate={{
-                    background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((personality + 1) / 4) * 100}%, rgba(255,255,255,0.1) ${((personality + 1) / 4) * 100}%, rgba(255,255,255,0.1) 100%)`,
+                    background: `linear-gradient(to right, #11E0FF 0%, #11E0FF ${((personality + 1) / 4) * 100}%, rgba(255,255,255,0.1) ${((personality + 1) / 4) * 100}%, rgba(255,255,255,0.1) 100%)`,
                   }}
                   transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
                 />
                 <motion.div
-                  className="absolute h-4 bg-primary/30 rounded-full blur-sm"
+                  className="absolute h-4 bg-[#11E0FF]/30 rounded-full blur-sm"
                   style={{
                     width: `${((personality + 1) / 4) * 100}%`,
                     left: '8px',
@@ -342,7 +342,7 @@ const PersonaBuilder = () => {
                     onClick={() => setPersonality(index as 0 | 1 | 2 | 3)}
                     initial={false}
                     animate={{
-                      color: personality === index ? '#3b82f6' : 'rgba(255,255,255,0.5)',
+                      color: personality === index ? '#11E0FF' : 'rgba(255,255,255,0.5)',
                       scale: personality === index ? 1.15 : 1,
                       y: personality === index ? -2 : 0,
                     }}
@@ -368,7 +368,7 @@ const PersonaBuilder = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.25 }}
-              className="text-sm uppercase tracking-[0.4em] text-sky mb-4 text-center"
+              className="text-sm uppercase tracking-[0.4em] text-[#11E0FF] mb-4 text-center"
             >
               Purpose
             </motion.p>
@@ -388,14 +388,14 @@ const PersonaBuilder = () => {
                   className="relative"
                 >
                   <motion.span
-                    className="text-lg font-bold text-primary capitalize px-3 py-1 rounded-lg bg-primary/10 border border-primary/30"
+                    className="text-lg font-bold text-[#11E0FF] capitalize px-3 py-1 rounded-lg bg-[#11E0FF]/10 border border-[#11E0FF]/30"
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
                   >
                     {purposeOptions[purpose]}
                   </motion.span>
                   <motion.div
-                    className="absolute inset-0 rounded-lg bg-primary/20 blur-xl -z-10"
+                    className="absolute inset-0 rounded-lg bg-[#11E0FF]/20 blur-xl -z-10"
                     animate={{ 
                       opacity: [0.3, 0.6, 0.3],
                       scale: [1, 1.2, 1]
@@ -413,12 +413,12 @@ const PersonaBuilder = () => {
                   className="absolute inset-x-2 h-4 bg-white/10 rounded-full"
                   initial={false}
                   animate={{
-                    background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((purpose + 1) / 4) * 100}%, rgba(255,255,255,0.1) ${((purpose + 1) / 4) * 100}%, rgba(255,255,255,0.1) 100%)`,
+                    background: `linear-gradient(to right, #11E0FF 0%, #11E0FF ${((purpose + 1) / 4) * 100}%, rgba(255,255,255,0.1) ${((purpose + 1) / 4) * 100}%, rgba(255,255,255,0.1) 100%)`,
                   }}
                   transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
                 />
                 <motion.div
-                  className="absolute h-4 bg-primary/30 rounded-full blur-sm"
+                  className="absolute h-4 bg-[#11E0FF]/30 rounded-full blur-sm"
                   style={{
                     width: `${((purpose + 1) / 4) * 100}%`,
                     left: '8px',
@@ -449,7 +449,7 @@ const PersonaBuilder = () => {
                     onClick={() => setPurpose(index as 0 | 1 | 2 | 3)}
                     initial={false}
                     animate={{
-                      color: purpose === index ? '#3b82f6' : 'rgba(255,255,255,0.5)',
+                      color: purpose === index ? '#11E0FF' : 'rgba(255,255,255,0.5)',
                       scale: purpose === index ? 1.15 : 1,
                       y: purpose === index ? -2 : 0,
                     }}
@@ -467,21 +467,22 @@ const PersonaBuilder = () => {
         </div>
         <button
           onClick={handleCreate}
-          className="rounded-xl bg-accent px-6 py-3 font-semibold text-white disabled:opacity-50"
+          className="rounded-xl bg-[#11E0FF]/20 border-2 border-[#11E0FF]/50 px-6 py-3 font-semibold text-[#11E0FF] disabled:opacity-50 hover:bg-[#11E0FF]/30 hover:shadow-[0_0_20px_rgba(17,224,255,0.5)] transition"
+          style={{ textShadow: '0 0 8px rgba(17, 224, 255, 0.6)' }}
           disabled={isGenerating}
         >
           {isGenerating ? 'Designing persona…' : 'Generate Persona'}
         </button>
         {generatedPersona && (
-          <div className="rounded-2xl border border-white/10 bg-midnight/40 p-4 text-sm text-white/80">
-            <p className="text-xs uppercase tracking-[0.4em] text-sky">Persona blueprint</p>
+          <div className="rounded-2xl border border-[#11E0FF]/20 bg-[#1C2340] p-4 text-sm text-white/80">
+            <p className="text-xs uppercase tracking-[0.4em] text-[#11E0FF]">Persona blueprint</p>
             <p className="text-lg text-white">{generatedPersona.name}</p>
             <p>{generatedPersona.description}</p>
             <p className="mt-2 text-xs text-white/60">{generatedPersona.conversationStyle}</p>
           </div>
         )}
-        <motion.div className="rounded-2xl border border-white/10 bg-midnight/50 p-4" layout>
-          <p className="text-sm uppercase tracking-[0.4em] text-sky">Chat window</p>
+        <motion.div className="rounded-2xl border border-[#11E0FF]/20 bg-[#1E2A49] p-4" layout>
+          <p className="text-sm uppercase tracking-[0.4em] text-[#11E0FF]">Chat window</p>
           <div className="mt-3 space-y-3">
             {chatLog.map((entry, index) => (
               <div
@@ -519,8 +520,8 @@ const PersonaBuilder = () => {
                 <div
                   className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${
                     entry.from === 'ai'
-                      ? 'bg-white/10 text-white'
-                      : 'bg-primary/80 text-white shadow-lg shadow-primary/30'
+                      ? 'bg-[#1C2340] text-white border border-[#11E0FF]/30'
+                      : 'bg-[#1E2A49] text-white border border-[#FFB743]/30 shadow-lg shadow-[#FFB743]/20'
                   }`}
                 >
                   {entry.text}
@@ -534,7 +535,7 @@ const PersonaBuilder = () => {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && !isSending && handleSendMessage()}
-                className="flex-1 rounded-xl border border-white/20 bg-transparent px-3 py-2 text-white"
+                className="flex-1 rounded-xl border border-[#11E0FF]/30 bg-[#1C2340] px-3 py-2 text-white focus:border-[#11E0FF] focus:outline-none focus:ring-2 focus:ring-[#11E0FF]/20"
                 placeholder="Type a message or use Speak button…"
                 disabled={!personaId || isRecording}
               />
@@ -543,7 +544,7 @@ const PersonaBuilder = () => {
                 className={`rounded-xl px-4 py-2 text-sm font-semibold text-white transition ${
                   isRecording
                     ? 'bg-rose-500 hover:bg-rose-600'
-                    : 'bg-primary hover:bg-primary/90'
+                    : 'bg-[#11E0FF]/20 border-2 border-[#11E0FF]/50 hover:bg-[#11E0FF]/30 hover:shadow-[0_0_20px_rgba(17,224,255,0.5)] text-[#11E0FF]'
                 } disabled:opacity-50`}
                 disabled={!personaId || isTranscribing}
               >
@@ -551,7 +552,8 @@ const PersonaBuilder = () => {
               </button>
               <button
                 onClick={handleSendMessage}
-                className="rounded-xl border border-white/30 bg-white/5 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10 disabled:opacity-50"
+                className="rounded-xl border-2 border-[#11E0FF]/50 bg-[#11E0FF]/10 px-4 py-2 text-sm font-semibold text-[#11E0FF] hover:bg-[#11E0FF]/20 hover:shadow-[0_0_15px_rgba(17,224,255,0.4)] disabled:opacity-50 transition"
+          style={{ textShadow: '0 0 6px rgba(17, 224, 255, 0.5)' }}
                 disabled={!personaId || isSending || !message.trim()}
               >
                 {isSending ? 'Sending…' : 'Send'}
@@ -559,7 +561,7 @@ const PersonaBuilder = () => {
             </div>
             <button
               onClick={handleContinue}
-              className="rounded-xl border border-primary/50 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/20 disabled:opacity-50"
+              className="rounded-xl border border-primary/50 bg-[#11E0FF]/10 px-4 py-2 text-sm font-semibold text-[#11E0FF] hover:bg-[#11E0FF]/20 disabled:opacity-50"
               disabled={!personaId || isSending}
             >
               {isSending ? 'AI thinking…' : 'Continue'}

@@ -205,21 +205,30 @@ const FutureProfession = () => {
     }
   }
 
+  const handleReset = () => {
+    setImageUrl(undefined)
+    setStyledUrl(undefined)
+    setStyleMeta(undefined)
+    setEmailStatus(undefined)
+    setEmail('')
+    setIsModalOpen(false)
+  }
+
   return (
     <ActivityLayout
       title="Future Profession"
       subtitle="Record a bilingual self-intro, get an AI profession prediction, then generate a portrait with that role."
     >
-      <div className="space-y-6 rounded-3xl border border-white/10 bg-white/5 p-6">
+      <div className="space-y-6 rounded-3xl border border-[#11E0FF]/30 bg-[#1E2A49] p-6">
         {/* Voice Challenge Section */}
-        <section className="space-y-4 rounded-2xl border border-white/10 bg-midnight/40 p-4">
+        <section className="space-y-4 rounded-2xl border border-[#11E0FF]/20 bg-[#1C2340] p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className="text-xs uppercase tracking-[0.35em] text-sky">Prompt</p>
+              <p className="text-xs uppercase tracking-[0.35em] text-[#11E0FF]">Prompt</p>
               <p className="font-semibold text-white">
                 {renderText({
-                  en: '“Speak about yourself and the things you like.”',
-                  th: '“พูดเกี่ยวกับตัวคุณและสิ่งที่คุณชอบ”',
+                  en: '“Speak about yourself and the things you like. (Favorite color, food, video game)”',
+                  th: '“พูดเกี่ยวกับตัวคุณและสิ่งที่คุณชอบ (สีที่ชอบ อาหารที่ชอบ เกมที่ชอบ)”',
                 })}
               </p>
             </div>
@@ -232,14 +241,16 @@ const FutureProfession = () => {
             <button
               onClick={handleRecord}
               disabled={isRecording}
-              className="rounded-xl bg-primary px-6 py-3 font-semibold text-white disabled:opacity-50"
+              className="rounded-xl bg-[#11E0FF]/20 border-2 border-[#11E0FF]/50 px-6 py-3 font-semibold text-[#11E0FF] disabled:opacity-50 hover:bg-[#11E0FF]/30 hover:shadow-[0_0_20px_rgba(17,224,255,0.5)] transition"
+              style={{ textShadow: '0 0 8px rgba(17, 224, 255, 0.6)' }}
             >
               {isRecording ? 'Recording…' : 'Start Recording'}
             </button>
             {isRecording && (
               <button
                 onClick={finalizeRecording}
-                className="rounded-xl border border-white/30 px-6 py-3 font-semibold text-white hover:border-white"
+                className="rounded-xl border-2 border-[#FFB743]/50 bg-[#FFB743]/10 px-6 py-3 font-semibold text-[#FFB743] hover:bg-[#FFB743]/20 hover:shadow-[0_0_15px_rgba(255,183,67,0.4)] transition"
+                style={{ textShadow: '0 0 6px rgba(255, 183, 67, 0.5)' }}
               >
                 Stop & Analyze
               </button>
@@ -311,7 +322,7 @@ const FutureProfession = () => {
         </section>
 
         {/* Photo Booth Section */}
-        <section className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-4">
+        <section className="space-y-4 rounded-2xl border border-[#11E0FF]/20 bg-[#1E2A49] p-4">
           <div className="grid gap-6 md:grid-cols-[3fr,2fr]">
             <div className="space-y-3">
               <p className="text-sm text-white/70">Live camera preview</p>
@@ -327,7 +338,8 @@ const FutureProfession = () => {
                   <button
                     onClick={captureFrame}
                     disabled={!cameraReady}
-                    className="rounded-full border border-primary px-4 py-2 text-sm font-semibold text-primary transition hover:bg-primary hover:text-white disabled:border-white/20 disabled:text-white/40"
+                    className="rounded-full border-2 border-[#11E0FF]/50 bg-[#11E0FF]/10 px-4 py-2 text-sm font-semibold text-[#11E0FF] transition hover:bg-[#11E0FF]/20 hover:shadow-[0_0_15px_rgba(17,224,255,0.4)] disabled:border-[#11E0FF]/20 disabled:text-[#11E0FF]/40"
+                    style={{ textShadow: '0 0 6px rgba(17, 224, 255, 0.5)' }}
                   >
                     Capture Photo
                   </button>
@@ -336,26 +348,27 @@ const FutureProfession = () => {
               {cameraError && <p className="rounded-xl bg-rose-500/10 p-3 text-sm text-rose-200">{cameraError}</p>}
             </div>
 
-            <div className="space-y-3 rounded-2xl border border-white/10 bg-midnight/50 p-4">
+            <div className="space-y-3 rounded-2xl border border-[#11E0FF]/20 bg-[#1C2340] p-4">
               <label className="text-sm text-white/70">
                 Profession from AI (editable)
                 <input
-                  className="mt-2 w-full rounded-xl border border-white/20 bg-transparent px-3 py-2 text-white"
+                  className="mt-2 w-full rounded-xl border border-[#11E0FF]/30 bg-[#1E2A49] px-3 py-2 text-white focus:border-[#11E0FF] focus:outline-none focus:ring-2 focus:ring-[#11E0FF]/20"
                   value={profession}
                   onChange={(e) => setProfession(e.target.value)}
                 />
               </label>
-              <p className="text-sm text-white/70">Style options</p>
+              <p className="text-sm text-[#11E0FF] font-semibold">Style options</p>
               <div className="flex flex-wrap gap-2 text-xs">
                 {['Studio Portrait', 'Comic-Book', 'Neon Glow'].map((styleOption) => (
                   <button
                     key={styleOption}
                     onClick={() => setStyle(styleOption)}
-                    className={`rounded-full border px-3 py-1 transition ${
+                    className={`rounded-full border-2 px-3 py-1.5 font-semibold transition ${
                       style === styleOption
-                        ? 'border-primary bg-primary/20 text-white'
-                        : 'border-white/20 bg-white/5 text-white/70 hover:border-white/60'
+                        ? 'border-[#11E0FF] bg-[#11E0FF]/20 text-[#11E0FF] shadow-[0_0_15px_rgba(17,224,255,0.4)]'
+                        : 'border-[#11E0FF]/30 bg-[#1E2A49]/50 text-white/70 hover:border-[#11E0FF]/60 hover:bg-[#1E2A49]'
                     }`}
+                    style={style === styleOption ? { textShadow: '0 0 6px rgba(17, 224, 255, 0.6)' } : {}}
                   >
                     {styleOption}
                   </button>
@@ -364,7 +377,8 @@ const FutureProfession = () => {
               <button
                 onClick={handleGenerate}
                 disabled={isGenerating}
-                className="w-full rounded-xl bg-accent px-6 py-3 font-semibold text-white transition hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full rounded-xl bg-[#11E0FF]/20 border-2 border-[#11E0FF]/50 px-6 py-3 font-semibold text-[#11E0FF] transition hover:bg-[#11E0FF]/30 hover:shadow-[0_0_20px_rgba(17,224,255,0.5)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                style={{ textShadow: '0 0 8px rgba(17, 224, 255, 0.6)' }}
               >
                 {isGenerating ? (
                   <>
@@ -410,7 +424,7 @@ const FutureProfession = () => {
             )}
 
             {styledUrl && !isGenerating && (
-              <div className="space-y-2 rounded-2xl border border-primary/40 bg-primary/10 p-4">
+              <div className="space-y-2 rounded-2xl border border-[#11E0FF]/40 bg-[#11E0FF]/10 p-4">
                 <p className="text-sm text-white/60">AI-enhanced portrait</p>
                 <button
                   type="button"
@@ -444,7 +458,8 @@ const FutureProfession = () => {
                   <button
                     onClick={handleSendEmail}
                     disabled={isSendingEmail}
-                    className="w-full rounded-xl border border-white/40 bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/20 disabled:opacity-50"
+                    className="w-full rounded-xl border-2 border-[#FFB743]/50 bg-[#FFB743]/10 px-4 py-2 text-sm font-semibold text-[#FFB743] hover:bg-[#FFB743]/20 hover:shadow-[0_0_15px_rgba(255,183,67,0.4)] disabled:opacity-50 transition"
+                    style={{ textShadow: '0 0 6px rgba(255, 183, 67, 0.5)' }}
                   >
                     {isSendingEmail ? 'Sending…' : 'Send to email'}
                   </button>
@@ -477,6 +492,19 @@ const FutureProfession = () => {
             </AnimatePresence>
           </div>
         </section>
+
+        {/* Reset Button - Only shows when picture is taken */}
+        {imageUrl && (
+          <div className="flex justify-center pt-4">
+            <button
+              onClick={handleReset}
+              className="rounded-xl border-2 border-[#FFB743]/50 bg-[#FFB743]/10 px-6 py-3 font-semibold text-[#FFB743] hover:bg-[#FFB743]/20 hover:shadow-[0_0_15px_rgba(255,183,67,0.4)] transition"
+              style={{ textShadow: '0 0 6px rgba(255, 183, 67, 0.5)' }}
+            >
+              🔄 Reset & Take New Photo
+            </button>
+          </div>
+        )}
       </div>
     </ActivityLayout>
   )

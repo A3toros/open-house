@@ -1,11 +1,12 @@
 import FutureProfession from './FutureProfession'
 import StoryForge from './StoryForge'
 import CultureTranslator from './CultureTranslator'
-import EscapeMission from './EscapeMission'
+import Riddles from './Riddles'
 import DebateArena from './DebateArena'
 import PersonaBuilder from './PersonaBuilder'
 import VocabularyRPG from './VocabularyRPG'
 import ParentCorner from './ParentCorner'
+import BecomeSuperhero from './BecomeSuperhero'
 
 export const activities = [
   {
@@ -16,7 +17,7 @@ export const activities = [
   },
   {
     slug: 'story-forge',
-    title: 'AI Story Forge',
+    title: 'AI Story Maker',
     description: 'Mix genres, character traits, and plots to co-write a 6–8 sentence story with grammar coaching.',
     component: StoryForge,
   },
@@ -27,10 +28,10 @@ export const activities = [
     component: CultureTranslator,
   },
   {
-    slug: 'escape-mission',
-    title: 'AI Escape Mission',
-    description: 'Solve AI-generated riddles by speaking answers and racing the countdown in a digital escape room.',
-    component: EscapeMission,
+    slug: 'riddles',
+    title: 'AI Riddles',
+    description: 'Solve riddles by typing or speaking your answers. Get points for correct answers!',
+    component: Riddles,
   },
   {
     slug: 'debate-arena',
@@ -55,6 +56,12 @@ export const activities = [
     title: 'Parent Corner',
     description: 'Browse looping mini-talks on AI literacy, safety, and English practice tips for families.',
     component: ParentCorner,
+  },
+  {
+    slug: 'become-superhero',
+    title: 'Become Superhero',
+    description: 'Record your qualities, take a photo, and become a superhero or super villain with AI-generated superpowers!',
+    component: BecomeSuperhero,
   },
 ] as const
 

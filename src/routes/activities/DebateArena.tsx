@@ -7,19 +7,16 @@ import { readLocalJson, writeLocalJson } from '../../utils/storage'
 import { useClearLocalStorage } from '../../hooks/useClearLocalStorage'
 
 const prompts = [
-  'Should robots replace teachers?',
-  'Homework: necessary or outdated?',
-  'Is AI dangerous or helpful?',
-  'Should uniforms be required in school?',
-  'Is gaming a real sport?',
-  'Should homework be banned on weekends?',
-  'Can AI be a fair judge in competitions?',
-  'Should zoos still exist?',
-  'Do teens need phones in class?',
-  'Will virtual reality replace field trips?',
-  'Should plastic water bottles be banned?',
-  'Is space tourism a good idea?',
-  'Should students choose their own teachers?',
+  'Should every kid have a robot friend?',
+  'Is a flying car better than a normal car?',
+  'Should school be at home on a computer or in a real classroom?',
+  'Is a robot teacher better than a human teacher?',
+  'Should kids go on a school trip to the Moon?',
+  'Is a robot pet better than a real pet?',
+  'Should all houses be smart houses that talk to you?',
+  'Is it good if all food comes in one healthy pill?',
+  'Should people live under the ocean in the future?',
+  'Should all cars in the future drive by themselves?',
 ]
 
 type DebateTurn = {
@@ -111,44 +108,47 @@ const DebateArena = () => {
   return (
     <ActivityLayout
       title="AI Debate Arena"
-      subtitle="Rapid-fire debate coach: speak (or type) your stance, let AI rebut, then go again."
+      subtitle="Debate with ai and become better and speaking"
     >
-      <div className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-6">
+      <div className="space-y-4 rounded-2xl border border-[#11E0FF]/30 bg-[#1E2A49] p-6">
         <div className="flex flex-wrap items-center gap-3">
           <span className="text-sm text-white/70">Current prompt:</span>
           <select
-            className="rounded-xl border border-white/20 bg-midnight/50 px-3 py-2 text-white"
+            className="rounded-xl border border-[#11E0FF]/30 bg-[#1E2A49] px-3 py-2 text-white focus:border-[#11E0FF] focus:outline-none focus:ring-2 focus:ring-[#11E0FF]/20"
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
           >
             {prompts.map((p) => (
-              <option key={p} value={p} className="bg-midnight">
+              <option key={p} value={p} className="bg-[#1E2A49]">
                 {p}
               </option>
             ))}
           </select>
           <button
             onClick={randomizePrompt}
-            className="rounded-full border border-white/30 px-4 py-2 text-xs uppercase tracking-wide text-white/80"
+            className="rounded-full border-2 border-cyan-400/50 bg-cyan-400/10 px-5 py-2.5 text-sm font-semibold text-cyan-300 transition hover:border-cyan-400 hover:bg-cyan-400/20 active:scale-95"
+            style={{ textShadow: '0 0 8px rgba(34, 211, 238, 0.6)' }}
           >
-            Randomize prompt
+            🎲 Randomize prompt
           </button>
         </div>
-        <div className="space-y-3 rounded-2xl border border-white/10 bg-midnight/40 p-4">
+        <div className="space-y-3 rounded-2xl border border-[#11E0FF]/20 bg-[#1C2340] p-4">
           <div className="flex flex-wrap gap-3">
             {!isRecording ? (
               <button
                 onClick={startRecording}
-                className="rounded-full border border-white/30 px-4 py-2 text-xs uppercase tracking-wide text-white/80 hover:border-white disabled:opacity-50"
+                className="rounded-full border-2 border-emerald-400/50 bg-emerald-400/10 px-6 py-3 text-sm font-semibold text-emerald-300 transition hover:border-emerald-400 hover:bg-emerald-400/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={loading}
+                style={{ textShadow: '0 0 8px rgba(52, 211, 153, 0.6)' }}
               >
                 🎙 Start recording
               </button>
             ) : (
               <button
                 onClick={submitArgument}
-                className="rounded-full bg-rose-500/80 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white"
+                className="rounded-full border-2 border-rose-500/70 bg-rose-500/20 px-6 py-3 text-sm font-semibold text-rose-300 transition hover:border-rose-500 hover:bg-rose-500/30 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={loading}
+                style={{ textShadow: '0 0 8px rgba(244, 63, 94, 0.6)' }}
               >
                 ⏹ Stop & send to AI
               </button>
@@ -163,18 +163,18 @@ const DebateArena = () => {
           {errorMessage && <p className="text-sm text-rose-300">{errorMessage}</p>}
         </div>
         {conversation.length > 0 ? (
-          <div className="space-y-4 rounded-2xl bg-midnight/50 p-4">
+          <div className="space-y-4 rounded-2xl bg-[#1E2A49] p-4">
             {conversation.map((turn) => (
               <div key={turn.id} className="space-y-3 rounded-2xl border border-white/5 bg-white/5 p-4 text-white/80">
                 <div className="rounded-xl bg-white/10 p-3">
-                  <div className="flex items-center justify-between text-xs uppercase tracking-[0.4em] text-sky">
+                  <div className="flex items-center justify-between text-xs uppercase tracking-[0.4em] text-[#11E0FF]">
                     <span>Student</span>
                     <span className="text-white/50">{new Date(turn.createdAt).toLocaleTimeString()}</span>
                   </div>
                   <p className="mt-2 text-sm">{turn.transcript}</p>
                 </div>
                 <div className="rounded-lg border border-white/10 bg-white/5 p-2">
-                  <p className="text-xs uppercase tracking-[0.4em] text-sky">AI rebuttal</p>
+                  <p className="text-xs uppercase tracking-[0.4em] text-[#11E0FF]">AI rebuttal</p>
                   <p className="mt-1 text-sm">{turn.rebuttal}</p>
                   <div className="mt-3 flex gap-2">
                     <button
@@ -186,7 +186,8 @@ const DebateArena = () => {
                     {!isRecording && !loading && (
                       <button
                         onClick={startRecording}
-                        className="rounded-full bg-emerald-500/80 px-3 py-1 text-xs font-semibold text-white hover:bg-emerald-500"
+                        className="rounded-full border-2 border-[#11E0FF]/50 bg-[#11E0FF]/10 px-3 py-1 text-xs font-semibold text-[#11E0FF] hover:bg-[#11E0FF]/20 hover:shadow-[0_0_10px_rgba(17,224,255,0.4)] transition"
+                      style={{ textShadow: '0 0 4px rgba(17, 224, 255, 0.5)' }}
                       >
                         💬 Reply
                       </button>
