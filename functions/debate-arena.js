@@ -29,9 +29,17 @@ exports.handler = async (event) => {
         messages: [
           {
             role: 'user',
-            content: `Evaluate this debate response for prompt "${prompt}". Transcript: "${resolvedTranscript}".
+            content: `You are a friendly AI debate partner speaking to a 10-year-old child. The child has responded to the debate prompt: "${prompt}" with this argument: "${resolvedTranscript}".
+
+Your task: Provide a simple, age-appropriate counter-argument that:
+- Uses simple words and short sentences that a 10-year-old can easily understand
+- Avoids complex vocabulary or abstract concepts
+- Is polite, encouraging, and friendly
+- Challenges their idea in a fun, respectful way
+- Keeps the response to one sentence
+
 Return JSON with keys:
-- rebuttal (one sentence counter-argument, polite and encouraging).`,
+- rebuttal (one sentence counter-argument using simple language appropriate for a 10-year-old, polite and encouraging).`,
           },
         ],
       },
@@ -46,7 +54,7 @@ Return JSON with keys:
       result = {
         feedback: rawContent,
         scores: { clarity: 70, evidence: 60, creativity: 65, tone: 80 },
-        rebuttal: 'Consider adding more concrete examples to support your position.',
+        rebuttal: 'That\'s a good point! But what if we think about it this way?',
       }
     }
 

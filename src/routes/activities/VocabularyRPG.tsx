@@ -425,10 +425,38 @@ const VocabularyRPG = () => {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={fetchNextCard}
+              onClick={async () => {
+                if (!runId || !gameSessionId) return
+                setIsLoading(true)
+                setErrorMessage(undefined)
+                try {
+                  const response = await apiClient.post<{ runId: string | null; card: Card | null; gameComplete?: boolean }>('/vocabulary-rpg', {
+                    action: 'skip',
+                    runId,
+                    gameSessionId,
+                  })
+                  if (response.gameComplete || !response.runId || !response.card) {
+                    if (wordsAnswered >= 10 && lives > 0) {
+                      setGameWon(true)
+                    } else {
+                      setErrorMessage('No more cards available. Please start a new game.')
+                    }
+                    return
+                  }
+                  setRunId(response.runId)
+                  setCard(response.card)
+                  setGuess('')
+                  setFeedback(undefined)
+                  setFeedbackType(null)
+                } catch (error) {
+                  setErrorMessage((error as Error).message)
+                } finally {
+                  setIsLoading(false)
+                }
+              }}
               className="w-full mt-3 rounded-xl bg-[#9B5BFF]/20 border-2 border-[#9B5BFF]/50 px-4 py-3 font-semibold text-[#9B5BFF] hover:bg-[#9B5BFF]/30 hover:shadow-[0_0_20px_rgba(155,91,255,0.5)] transition disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ textShadow: '0 0 8px rgba(155, 91, 255, 0.6)' }}
-              disabled={isLoading || isTranscribing}
+              disabled={isLoading || isTranscribing || !runId || !gameSessionId}
             >
               ⏭️ Skip Word
             </motion.button>

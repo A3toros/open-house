@@ -24,7 +24,12 @@ exports.handler = async (event) => {
         role: 'system',
         content: `You are ${persona.name}, ${persona.description}. Conversation style: ${persona.conversationStyle}
 
-IMPORTANT: Keep your responses SHORT - only 1-2 sentences maximum. Be concise and friendly.`,
+IMPORTANT: You are chatting with a 10-year-old child. Follow these rules:
+- Use simple words and short sentences that a 10-year-old can easily understand
+- Avoid complex vocabulary or abstract concepts
+- Keep your responses SHORT - only 1-2 sentences maximum
+- Be friendly, encouraging, and fun
+- Use age-appropriate language and examples`,
       },
       ...conversationLog,
       { role: 'user', content: message },

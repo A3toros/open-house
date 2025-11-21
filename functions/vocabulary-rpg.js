@@ -440,12 +440,12 @@ exports.handler = async (event) => {
       }
       
       // Find an unused card from this game session's card IDs
+      // Exclude cards that have been answered or skipped (user_answer = '' with correct = false means skipped)
       const unusedCards = await sql`
         SELECT id, definition, expected_word 
         FROM vocabulary_runs 
         WHERE id = ANY(${gameSession.cardIds})
-          AND user_answer IS NULL 
-          AND (correct IS NULL OR correct = false)
+          AND user_answer IS NULL
         ORDER BY created_at ASC
         LIMIT 1
       `
@@ -533,6 +533,45 @@ exports.handler = async (event) => {
       }
       
       return false
+    }
+
+    if (action === 'skip') {
+      if (!runId || !gameSessionId) return badRequest('runId and gameSessionId required')
+      
+      // Mark current card as skipped
+      await sql`
+        UPDATE vocabulary_runs
+        SET user_answer = '', correct = false, xp_earned = 0
+        WHERE id = ${runId}
+      `
+
+      await logEvent(sessionId, 'vocabulary-rpg', 'word-skipped', { runId })
+
+      // Get the next card
+      const gameSession = gameSessions.get(gameSessionId)
+      if (!gameSession || !gameSession.cardIds || gameSession.cardIds.length === 0) {
+        return badRequest('Game session not found or no cards available')
+      }
+      
+      const unusedCards = await sql`
+        SELECT id, definition, expected_word 
+        FROM vocabulary_runs 
+        WHERE id = ANY(${gameSession.cardIds})
+          AND user_answer IS NULL
+        ORDER BY created_at ASC
+        LIMIT 1
+      `
+
+      if (unusedCards.length > 0) {
+        const card = unusedCards[0]
+        return ok({
+          runId: card.id,
+          card: { definition: card.definition, word: card.expected_word },
+        })
+      }
+
+      // No more cards available
+      return ok({ runId: null, card: null, gameComplete: true })
     }
 
     if (action === 'answer') {

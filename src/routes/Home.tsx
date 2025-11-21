@@ -134,6 +134,8 @@ const Home = () => {
           src="/pics/Banner.webp"
           alt="Banner"
           className="absolute inset-0 w-full h-full object-cover"
+          loading="eager"
+          fetchPriority="high"
         />
         <div className="sticky top-0 h-[60vh] min-h-[400px] max-h-[600px] flex items-start justify-center overflow-hidden">
           <motion.p
