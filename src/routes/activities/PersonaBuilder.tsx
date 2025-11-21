@@ -26,96 +26,73 @@ const PersonaBuilder = () => {
   const [isSending, setIsSending] = useState(false)
   const [isTranscribing, setIsTranscribing] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string>()
-  const speechUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
+  const [isLoadingAudio, setIsLoadingAudio] = useState(false)
+  const [playingMessageIndex, setPlayingMessageIndex] = useState<number | null>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
 
   const getPersonalityDescription = () => {
     return personalityOptions[personality]
   }
 
-  // Get a female voice from available voices
-  const getFemaleVoice = useCallback(() => {
-    if (typeof window === 'undefined' || !window.speechSynthesis) return null
-    
-    const voices = window.speechSynthesis.getVoices()
-    // Try to find a female voice (common patterns: 'female', 'woman', or specific voice names)
-    const femaleVoice = voices.find(
-      (voice) =>
-        voice.name.toLowerCase().includes('female') ||
-        voice.name.toLowerCase().includes('woman') ||
-        voice.name.toLowerCase().includes('zira') || // Windows female voice
-        voice.name.toLowerCase().includes('samantha') || // macOS female voice
-        voice.name.toLowerCase().includes('karen') || // macOS female voice
-        voice.name.toLowerCase().includes('susan') || // macOS female voice
-        (voice.name.toLowerCase().includes('google') && voice.name.toLowerCase().includes('female')) ||
-        (voice.lang.startsWith('en') && voice.name.toLowerCase().includes('female'))
-    )
-    
-    // If no specific female voice found, try to find any English female voice by checking gender property (if available)
-    if (!femaleVoice) {
-      const englishVoices = voices.filter((v) => v.lang.startsWith('en'))
-      // Some browsers expose gender, but it's not standard - try common female voice indices
-      return englishVoices.length > 1 ? englishVoices[1] : englishVoices[0] || voices[0]
-    }
-    
-    return femaleVoice || voices.find((v) => v.lang.startsWith('en')) || voices[0]
-  }, [])
-
   // Stop speech
   const stopSpeech = useCallback(() => {
-    if (typeof window === 'undefined' || !window.speechSynthesis) return
-    window.speechSynthesis.cancel()
-    speechUtteranceRef.current = null
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current.currentTime = 0
+      audioRef.current = null
+    }
+    setIsLoadingAudio(false)
+    setPlayingMessageIndex(null)
   }, [])
 
-  // Speak AI responses with female voice
+  // Speak AI responses using GPT-4o mini TTS API
   const speakText = useCallback(
-    (text: string) => {
-      if (!text || typeof window === 'undefined' || !window.speechSynthesis) return
+    async (text: string, messageIndex: number) => {
+      if (!text) return
       
-      // Cancel any ongoing speech
+      // Stop any ongoing speech
       stopSpeech()
       
-      const utterance = new SpeechSynthesisUtterance(text)
-      utterance.lang = 'en-US'
-      
-      // Set female voice
-      const femaleVoice = getFemaleVoice()
-      if (femaleVoice) {
-        utterance.voice = femaleVoice
-      }
-      
-      // Set speech properties for natural female voice
-      utterance.rate = 1.0
-      utterance.pitch = 1.0
-      utterance.volume = 1.0
-      
-      utterance.onend = () => {
-        speechUtteranceRef.current = null
-      }
-      
-      utterance.onerror = () => {
-        speechUtteranceRef.current = null
-      }
-      
-      speechUtteranceRef.current = utterance
-      window.speechSynthesis.speak(utterance)
-    },
-    [getFemaleVoice, stopSpeech],
-  )
+      setIsLoadingAudio(true)
+      setPlayingMessageIndex(messageIndex)
+      try {
+        // Use English TTS API for high-quality speech
+        const response = await apiClient.post<{ audioUrl: string; success: boolean }>('/english-tts', {
+          text: text,
+          voice: 'nova', // Natural female voice
+        })
 
-  // Load voices when component mounts (voices may not be available immediately)
-  useEffect(() => {
-    if (typeof window === 'undefined' || !window.speechSynthesis) return
-    
-    const loadVoices = () => {
-      // Voices are loaded asynchronously, so we need to wait
-      if (window.speechSynthesis.getVoices().length === 0) {
-        window.speechSynthesis.addEventListener('voiceschanged', loadVoices, { once: true })
+        if (response.success && response.audioUrl) {
+          const audio = new Audio(response.audioUrl)
+          audioRef.current = audio
+          
+          audio.onended = () => {
+            audioRef.current = null
+            setIsLoadingAudio(false)
+            setPlayingMessageIndex(null)
+          }
+          
+          audio.onerror = () => {
+            audioRef.current = null
+            setIsLoadingAudio(false)
+            setPlayingMessageIndex(null)
+          }
+          
+          setIsLoadingAudio(false)
+          await audio.play()
+        } else {
+          setIsLoadingAudio(false)
+          setPlayingMessageIndex(null)
+          console.error('TTS API returned unsuccessful response')
+        }
+      } catch (error) {
+        console.error('TTS API error:', error)
+        setIsLoadingAudio(false)
+        setPlayingMessageIndex(null)
       }
-    }
-    
-    loadVoices()
-  }, [])
+    },
+    [stopSpeech],
+  )
 
   // Automatically speak AI responses when they're added to chat
   useEffect(() => {
@@ -125,7 +102,8 @@ const PersonaBuilder = () => {
     if (lastMessage.from === 'ai' && lastMessage.text) {
       // Small delay to ensure the message is rendered
       const timeoutId = setTimeout(() => {
-        speakText(lastMessage.text)
+        const messageIndex = chatLog.length - 1
+        speakText(lastMessage.text, messageIndex)
       }, 300)
       
       return () => clearTimeout(timeoutId)
@@ -487,34 +465,16 @@ const PersonaBuilder = () => {
             {chatLog.map((entry, index) => (
               <div
                 key={`${entry.text}-${index}`}
-                className={`flex items-start gap-2 ${entry.from === 'ai' ? 'justify-start' : 'justify-end'}`}
+                className={`flex items-center gap-2 ${entry.from === 'ai' ? 'justify-start' : 'justify-end'}`}
               >
-                {entry.from === 'ai' && (
+                {entry.from === 'ai' && playingMessageIndex === index && (
                   <button
                     onClick={stopSpeech}
-                    className="flex-shrink-0 rounded-full bg-white/10 p-1.5 text-white/70 hover:bg-white/20 hover:text-white transition"
-                    title="Stop speech"
+                    disabled={isLoadingAudio}
+                    className="flex-shrink-0 flex h-6 w-6 items-center justify-center rounded-full bg-rose-500/20 border border-rose-500/50 text-xs hover:bg-rose-500/30 hover:border-rose-500 transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                    title={isLoadingAudio ? 'Loading audio...' : 'Stop audio'}
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"
-                      />
-                    </svg>
+                    {isLoadingAudio ? '⏳' : '🔇'}
                   </button>
                 )}
                 <div

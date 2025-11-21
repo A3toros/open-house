@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "generate-parent-corner-audio": "node scripts/generate-parent-corner-audio.js"
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.10.1",

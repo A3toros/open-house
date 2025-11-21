@@ -3,7 +3,7 @@ const { ok, badRequest, serverError } = require('./response')
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 
-// OpenAI TTS API
+// OpenAI TTS API for English
 // Model options: 'tts-1' (faster) or 'tts-1-hd' (higher quality)
 const TTS_MODEL = 'tts-1'
 
@@ -12,17 +12,17 @@ exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return badRequest('Use POST')
 
   try {
-    const { text, language = 'th', voice = 'alloy' } = JSON.parse(event.body || '{}')
+    const { text, voice = 'nova' } = JSON.parse(event.body || '{}')
 
     if (!text || !text.trim()) {
       return badRequest('Text is required')
     }
 
     // Voice options: alloy, echo, fable, onyx, nova, shimmer
-    // For Thai and multilingual content, 'alloy' or 'nova' work well
+    // For English, 'nova' (caring, joyful, young female voice)
     const selectedVoice = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'].includes(voice) 
       ? voice 
-      : 'alloy'
+      : 'nova'
 
     if (!OPENAI_API_KEY) {
       return serverError('OPENAI_API_KEY is required for TTS')

@@ -1,28 +1,19 @@
-import { useState, useRef, useCallback, useEffect } from 'react'
-import { ActivityLayout } from '../ActivityLayout'
-import { motion, AnimatePresence } from 'framer-motion'
-import { useBilingualText } from '../../hooks/useBilingualText'
-import { useSession } from '../../contexts/SessionContext'
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
+import fetch from 'node-fetch'
 
-type Article = {
-  id: string
-  title: {
-    en: string
-    th: string
-  }
-  summary: {
-    en: string
-    th: string
-  }
-  content: {
-    en: string[]
-    th: string[]
-  }
-  imageUrl: string
-  category: 'benefits' | 'safety' | 'tools' | 'future'
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY
+
+if (!OPENAI_API_KEY) {
+  console.error('OPENAI_API_KEY environment variable is required')
+  process.exit(1)
 }
 
-const articles: Article[] = [
+const articles = [
   {
     id: 'ai-personalized-learning',
     title: {
@@ -45,8 +36,6 @@ const articles: Article[] = [
         'การวิจัยแสดงให้เห็นว่าการเรียนรู้แบบเฉพาะบุคคลสามารถเพิ่มการมีส่วนร่วมของนักเรียนได้ถึง 40% และช่วยให้นักเรียนบรรลุผลลัพธ์ทางวิชาการที่ดีขึ้น AI ทำให้สิ่งนี้เป็นไปได้โดยการติดตามความก้าวหน้าอย่างต่อเนื่องและปรับเส้นทางการเรียนรู้แบบเรียลไทม์',
       ],
     },
-    imageUrl: 'https://images.unsplash.com/photo-1501504905252-473c47e087f8?w=800&h=600&fit=crop',
-    category: 'benefits',
   },
   {
     id: 'ai-safety-privacy',
@@ -70,8 +59,6 @@ const articles: Article[] = [
         'ในฐานะผู้ปกครอง คุณควรสอบถามโรงเรียนเกี่ยวกับนโยบายความเป็นส่วนตัวของข้อมูล เข้าใจว่าข้อมูลใดถูกรวบรวม และให้แน่ใจว่าคุณมีสิทธิ์เข้าถึงหรือลบข้อมูลของลูกคุณ ความโปร่งใสและการสื่อสารระหว่างโรงเรียนและผู้ปกครองมีความจำเป็นสำหรับการสร้างความไว้วางใจในการศึกษาที่ขับเคลื่อนด้วย AI',
       ],
     },
-    imageUrl: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=800&h=600&fit=crop',
-    category: 'safety',
   },
   {
     id: 'ai-tools-for-home',
@@ -95,8 +82,6 @@ const articles: Article[] = [
         'จำไว้ว่าเครื่องมือ AI ควรเสริม ไม่ใช่แทนที่การโต้ตอบของมนุษย์ ส่งเสริมให้ลูกของคุณพูดคุยเกี่ยวกับสิ่งที่พวกเขากำลังเรียนรู้กับคุณ และใช้ AI เป็นเครื่องมือในการสำรวจหัวข้อร่วมกัน สร้างสมดุลระหว่างเวลาหน้าจอกับกิจกรรมเชิงปฏิบัติและประสบการณ์ในโลกแห่งความเป็นจริง',
       ],
     },
-    imageUrl: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&h=600&fit=crop',
-    category: 'tools',
   },
   {
     id: 'future-of-ai-education',
@@ -120,8 +105,6 @@ const articles: Article[] = [
         'อย่างไรก็ตาม องค์ประกอบของมนุษย์ยังคงมีความสำคัญ ครูจะยังคงมีบทบาทสำคัญในการสร้างแรงบันดาลใจให้นักเรียน ส่งเสริมความคิดสร้างสรรค์ และสอนทักษะการคิดเชิงวิพากษ์ที่ AI ไม่สามารถทำซ้ำได้ อนาคตคือการที่ AI และมนุษย์ทำงานร่วมกันเพื่อสร้างประสบการณ์การเรียนรู้ที่ดีที่สุด',
       ],
     },
-    imageUrl: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800&h=600&fit=crop',
-    category: 'future',
   },
   {
     id: 'ai-critical-thinking',
@@ -145,8 +128,6 @@ const articles: Article[] = [
         'ความสมดุลเป็นสิ่งสำคัญ: ใช้ AI สำหรับโจทย์ฝึกและคำอธิบาย แต่ยังมีส่วนร่วมในการอภิปราย อ่านหนังสือร่วมกัน และสำรวจหัวข้อผ่านการทดลองเชิงปฏิบัติ การรวมกันนี้ช่วยพัฒนาผู้เรียนที่รอบด้านซึ่งสามารถคิดเชิงวิพากษ์และสร้างสรรค์ได้',
       ],
     },
-    imageUrl: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&h=600&fit=crop',
-    category: 'benefits',
   },
   {
     id: 'ai-english-learning',
@@ -170,349 +151,84 @@ const articles: Article[] = [
         'แอปภาษาที่ใช้ AI หลายตัวใช้การเล่นเกมเพื่อทำให้การเรียนรู้สนุก ให้รางวัลความก้าวหน้าด้วยคะแนนและความสำเร็จ สิ่งนี้ทำให้เด็กมีแรงจูงใจในขณะที่พวกเขาฝึกฝน อย่างไรก็ตาม จำไว้ว่าการสนทนาจริงกับเจ้าของภาษาและการอ่านหนังสือจริงยังคงจำเป็นสำหรับการเชี่ยวชาญภาษาที่แท้จริง',
       ],
     },
-    imageUrl: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=800&h=600&fit=crop',
-    category: 'tools',
   },
 ]
 
-const categories = [
-  { id: 'all', label: { en: 'All Articles', th: 'บทความทั้งหมด' } },
-  { id: 'benefits', label: { en: 'Benefits', th: 'ประโยชน์' } },
-  { id: 'safety', label: { en: 'Safety & Privacy', th: 'ความปลอดภัยและความเป็นส่วนตัว' } },
-  { id: 'tools', label: { en: 'Tools & Resources', th: 'เครื่องมือและทรัพยากร' } },
-  { id: 'future', label: { en: 'Future Trends', th: 'แนวโน้มในอนาคต' } },
-]
+const audioDir = path.join(__dirname, '..', 'public', 'audio', 'parent-corner')
 
-const ParentCorner = () => {
-  const { renderText, locale } = useBilingualText()
-  const { setLocale } = useSession()
-  const [selectedCategory, setSelectedCategory] = useState<string>('all')
-  const [fullscreenArticle, setFullscreenArticle] = useState<Article | null>(null)
-  const [isNarrating, setIsNarrating] = useState<boolean>(false)
-  const [isLoadingAudio, setIsLoadingAudio] = useState<boolean>(false)
-  const [currentNarratingArticle, setCurrentNarratingArticle] = useState<Article | null>(null)
-  const audioRef = useRef<HTMLAudioElement | null>(null)
-
-  // Auto-select Thai language on component mount if no locale is set
-  useEffect(() => {
-    if (locale === 'bilingual') {
-      setLocale('th') // Default to Thai
-    }
-  }, []) // Only run on mount
-
-  const stopNarration = useCallback(() => {
-    // Stop audio playback (reset position)
-    if (audioRef.current) {
-      audioRef.current.pause()
-      audioRef.current.currentTime = 0
-      audioRef.current = null
-    }
-    
-    setIsNarrating(false)
-    setIsLoadingAudio(false)
-    setCurrentNarratingArticle(null)
-  }, [])
-
-  const pauseNarration = useCallback(() => {
-    // Pause audio playback (keep position)
-    if (audioRef.current) {
-      audioRef.current.pause()
-      // Don't reset currentTime - keep position for resume
-    }
-    
-    setIsNarrating(false)
-    setIsLoadingAudio(false)
-    // Keep currentNarratingArticle so we know which article to resume
-  }, [])
-
-  const handleNarration = useCallback(async (article: Article) => {
-    if (!article) return
-    
-    // If already narrating the same article, pause it (keep position for resume)
-    if (isNarrating && currentNarratingArticle === article) {
-      pauseNarration()
-      return
-    }
-
-    // If narrating a different article, stop the current one first
-    if (isNarrating && currentNarratingArticle !== article) {
-      stopNarration()
-    }
-
-    // Check if we have paused audio for this article that we can resume
-    if (audioRef.current && audioRef.current.paused && audioRef.current.currentTime > 0 && currentNarratingArticle === article) {
-      // Resume from where we paused
-      setIsNarrating(true)
-      setCurrentNarratingArticle(article)
-      await audioRef.current.play()
-      return
-    }
-
-    // Stop any ongoing narration (if starting fresh)
-    stopNarration()
-    setCurrentNarratingArticle(article)
-
-    // Use pre-recorded audio files instead of calling TTS API
-    const language = locale === 'th' ? 'th' : 'en'
-    const audioUrl = `/audio/parent-corner/${article.id}-${language}.mp3`
-    
-    try {
-      const audio = new Audio(audioUrl)
-      audioRef.current = audio
-      
-      audio.onended = () => {
-        audioRef.current = null
-        setIsNarrating(false)
-        setIsLoadingAudio(false)
-        setCurrentNarratingArticle(null)
-      }
-      
-      audio.onerror = () => {
-        audioRef.current = null
-        setIsNarrating(false)
-        setIsLoadingAudio(false)
-        setCurrentNarratingArticle(null)
-        console.error(`Failed to load audio: ${audioUrl}`)
-      }
-      
-      setIsNarrating(true)
-      setIsLoadingAudio(false)
-      await audio.play()
-    } catch (error) {
-      console.error('Audio playback error:', error)
-      setIsLoadingAudio(false)
-      setCurrentNarratingArticle(null)
-    }
-  }, [isNarrating, locale, stopNarration, pauseNarration, currentNarratingArticle])
-
-  const filteredArticles = selectedCategory === 'all' 
-    ? articles 
-    : articles.filter(article => article.category === selectedCategory)
-
-  const setLanguage = (lang: 'en' | 'th' | 'bilingual') => {
-    setLocale(lang)
-  }
-
-  return (
-    <>
-      {/* Language Buttons - Fixed position top right */}
-      <div className="fixed top-4 right-4 z-50 flex gap-2">
-        <button
-          onClick={() => setLanguage('th')}
-          className={`rounded-xl border-2 px-4 py-2 text-sm font-semibold transition ${
-            locale === 'th'
-              ? 'border-[#11E0FF] bg-[#11E0FF]/20 text-[#11E0FF] shadow-[0_0_15px_rgba(17,224,255,0.4)]'
-              : 'border-[#11E0FF]/30 bg-[#1E2A49]/50 text-white/70 hover:border-[#11E0FF]/60 hover:bg-[#1E2A49]'
-          }`}
-          style={locale === 'th' ? { textShadow: '0 0 6px rgba(17, 224, 255, 0.5)' } : {}}
-        >
-          TH
-        </button>
-        <button
-          onClick={() => setLanguage('en')}
-          className={`rounded-xl border-2 px-4 py-2 text-sm font-semibold transition ${
-            locale === 'en'
-              ? 'border-[#11E0FF] bg-[#11E0FF]/20 text-[#11E0FF] shadow-[0_0_15px_rgba(17,224,255,0.4)]'
-              : 'border-[#11E0FF]/30 bg-[#1E2A49]/50 text-white/70 hover:border-[#11E0FF]/60 hover:bg-[#1E2A49]'
-          }`}
-          style={locale === 'en' ? { textShadow: '0 0 6px rgba(17, 224, 255, 0.5)' } : {}}
-        >
-          EN
-        </button>
-      </div>
-
-      <ActivityLayout 
-        title={renderText({ en: 'Parent Corner', th: 'มุมผู้ปกครอง' })}
-        subtitle={renderText({ 
-          en: 'Expert articles on AI in education, safety tips, and learning resources for parents.',
-          th: 'บทความผู้เชี่ยวชาญเกี่ยวกับ AI ในการศึกษา เคล็ดลับความปลอดภัย และทรัพยากรการเรียนรู้สำหรับผู้ปกครอง'
-        })}
-      >
-        <div className="space-y-6 rounded-3xl border border-[#11E0FF]/30 bg-[#1E2A49] p-6">
-
-        {/* Category Filter */}
-        <div className="flex flex-wrap gap-3 border-b border-[#11E0FF]/20 pb-4">
-          {categories.map((category) => (
-            <button
-              key={category.id}
-              onClick={() => setSelectedCategory(category.id)}
-              className={`rounded-full border-2 px-4 py-2 text-sm font-semibold transition ${
-                selectedCategory === category.id
-                  ? 'border-[#11E0FF] bg-[#11E0FF]/20 text-[#11E0FF] shadow-[0_0_15px_rgba(17,224,255,0.4)]'
-                  : 'border-[#11E0FF]/30 bg-[#1E2A49]/50 text-white/70 hover:border-[#11E0FF]/60 hover:bg-[#1E2A49]'
-              }`}
-              style={selectedCategory === category.id ? { textShadow: '0 0 6px rgba(17, 224, 255, 0.6)' } : {}}
-            >
-              {renderText(category.label)}
-            </button>
-          ))}
-        </div>
-
-        {/* Articles Grid */}
-        <div className="grid gap-6 md:grid-cols-2">
-          <AnimatePresence mode="wait">
-            {filteredArticles.map((article, index) => (
-              <motion.article
-                key={article.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ delay: index * 0.1 }}
-                className="group cursor-pointer rounded-2xl border border-[#11E0FF]/20 bg-[#1C2340] overflow-hidden transition-all hover:border-[#11E0FF]/40 hover:shadow-[0_0_20px_rgba(17,224,255,0.2)]"
-                onClick={() => setFullscreenArticle(article)}
-              >
-                {/* Article Image */}
-                <div className="relative h-48 w-full overflow-hidden bg-[#1E2A49]">
-                  <img
-                    src={article.imageUrl}
-                    alt={renderText(article.title)}
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
-                    onError={(e) => {
-                      // Fallback if image fails to load
-                      e.currentTarget.style.display = 'none'
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#1C2340] via-transparent to-transparent" />
-                </div>
-
-                {/* Article Content */}
-                <div className="p-6">
-                  <h3 className="mb-2 font-display text-xl font-bold text-white transition-colors">
-                    {renderText(article.title)}
-                  </h3>
-
-                  <p className="mb-4 text-sm text-white/70">
-                    {renderText(article.summary)}
-                  </p>
-
-                  {/* Read More Indicator */}
-                  <div className="mt-4 flex items-center justify-between">
-                    <span className="text-xs text-[#11E0FF]">
-                      {renderText({ en: 'Click to read full article', th: 'คลิกเพื่ออ่านบทความเต็ม' })}
-                    </span>
-                    <span className="text-[#11E0FF]">→</span>
-                  </div>
-                </div>
-              </motion.article>
-            ))}
-          </AnimatePresence>
-        </div>
-
-        {/* Empty State */}
-        {filteredArticles.length === 0 && (
-          <div className="rounded-2xl border border-[#11E0FF]/20 bg-[#1C2340] p-8 text-center">
-            <p className="text-white/70">
-              {renderText({ 
-                en: 'No articles found in this category.',
-                th: 'ไม่พบบทความในหมวดหมู่นี้'
-              })}
-            </p>
-          </div>
-        )}
-      </div>
-    </ActivityLayout>
-
-      {/* Fullscreen Article Modal */}
-      <AnimatePresence>
-        {fullscreenArticle && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4"
-            onClick={() => {
-              stopNarration()
-              setFullscreenArticle(null)
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Escape') {
-                stopNarration()
-                setFullscreenArticle(null)
-              }
-            }}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className="relative max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-3xl border border-[#11E0FF]/30 bg-[#1C2340] p-8 shadow-[0_0_50px_rgba(17,224,255,0.3)]"
-            >
-              {/* Close Button */}
-              <button
-                onClick={() => {
-                  stopNarration()
-                  setFullscreenArticle(null)
-                }}
-                className="absolute top-4 right-4 rounded-full border-2 border-[#11E0FF]/50 bg-[#1E2A49] p-2 text-[#11E0FF] transition hover:border-[#11E0FF] hover:bg-[#11E0FF]/20"
-              >
-                ✕
-              </button>
-
-              {/* Article Image */}
-              <div className="mb-6 h-64 w-full overflow-hidden rounded-2xl bg-[#1E2A49]">
-                <img
-                  src={fullscreenArticle.imageUrl}
-                  alt={renderText(fullscreenArticle.title)}
-                  className="h-full w-full object-cover"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none'
-                  }}
-                />
-              </div>
-
-              {/* Article Title */}
-              <h2 className="mb-4 font-display text-3xl font-bold text-white">
-                {renderText(fullscreenArticle.title)}
-              </h2>
-
-              {/* Narration Button */}
-              <div className="mb-6">
-                <button
-                  onClick={() => handleNarration(fullscreenArticle)}
-                  disabled={isLoadingAudio}
-                  className={`flex items-center gap-2 rounded-xl border-2 px-6 py-3 text-sm font-semibold transition ${
-                    isNarrating
-                      ? 'border-[#FFB743] bg-[#FFB743]/20 text-[#FFB743]'
-                      : 'border-[#11E0FF]/50 bg-[#11E0FF]/10 text-[#11E0FF] hover:border-[#11E0FF] hover:bg-[#11E0FF]/20'
-                  } ${isLoadingAudio ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  {isLoadingAudio ? (
-                    <>
-                      <span className="animate-spin">⏳</span>
-                      {renderText({ en: 'Loading audio...', th: 'กำลังโหลดเสียง...' })}
-                    </>
-                  ) : isNarrating ? (
-                    <>
-                      ⏸️ {renderText({ en: 'Pause', th: 'หยุด' })}
-                    </>
-                  ) : (
-                    <>
-                      🔊 {renderText({ en: 'Listen', th: 'ฟัง' })}
-                    </>
-                  )}
-                </button>
-              </div>
-
-              {/* Article Summary */}
-              <p className="mb-6 text-lg text-white/80">
-                {renderText(fullscreenArticle.summary)}
-              </p>
-
-              {/* Article Content */}
-              <div className="space-y-4 border-t border-[#11E0FF]/20 pt-6">
-                {fullscreenArticle.content[locale === 'th' ? 'th' : 'en'].map((paragraph, idx) => (
-                  <p key={idx} className="text-base leading-relaxed text-white/90">
-                    {paragraph}
-                  </p>
-                ))}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
-  )
+// Ensure directory exists
+if (!fs.existsSync(audioDir)) {
+  fs.mkdirSync(audioDir, { recursive: true })
 }
 
-export default ParentCorner
+async function generateAudio(articleId, language, text, voice) {
+  const filename = `${articleId}-${language}.mp3`
+  const filepath = path.join(audioDir, filename)
+
+  // Skip if file already exists
+  if (fs.existsSync(filepath)) {
+    console.log(`✓ ${filename} already exists, skipping...`)
+    return filepath
+  }
+
+  console.log(`Generating ${filename}...`)
+
+  try {
+    const response = await fetch('https://api.openai.com/v1/audio/speech', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'tts-1',
+        input: text,
+        voice: voice,
+        response_format: 'mp3',
+        speed: 1.0,
+      }),
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`TTS API error: ${errorText}`)
+    }
+
+    const buffer = await response.arrayBuffer()
+    fs.writeFileSync(filepath, Buffer.from(buffer))
+    console.log(`✓ Generated ${filename}`)
+    return filepath
+  } catch (error) {
+    console.error(`✗ Failed to generate ${filename}:`, error.message)
+    throw error
+  }
+}
+
+async function generateAllAudio() {
+  console.log('Starting audio generation for Parent Corner articles...\n')
+
+  for (const article of articles) {
+    // Generate English audio
+    const englishText = `${article.title.en}. ${article.summary.en}. ${article.content.en.join(' ')}`
+    await generateAudio(article.id, 'en', englishText, 'nova')
+    
+    // Small delay to avoid rate limiting
+    await new Promise(resolve => setTimeout(resolve, 1000))
+
+    // Generate Thai audio
+    const thaiText = `${article.title.th}. ${article.summary.th}. ${article.content.th.join(' ')}`
+    await generateAudio(article.id, 'th', thaiText, 'alloy')
+    
+    // Small delay to avoid rate limiting
+    await new Promise(resolve => setTimeout(resolve, 1000))
+  }
+
+  console.log('\n✓ All audio files generated successfully!')
+  console.log(`Files saved to: ${audioDir}`)
+}
+
+generateAllAudio().catch(error => {
+  console.error('Error generating audio:', error)
+  process.exit(1)
+})
+

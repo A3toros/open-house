@@ -29,9 +29,10 @@ const CultureTranslator = () => {
   const [errorMessage, setErrorMessage] = useState<string>()
   const [audioPayload, setAudioPayload] = useState<string>()
   const [transcript, setTranscript] = useState<string>()
-  const narrationRef = useRef<SpeechSynthesisUtterance | null>(null)
+  const [isLoadingAudio, setIsLoadingAudio] = useState(false)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
 
-  // Get a female voice from available voices
+  // Get a female voice from available voices (kept for potential fallback, but not used with API TTS)
   const getFemaleVoice = useCallback(() => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return null
     const availableVoices = window.speechSynthesis.getVoices()
@@ -133,35 +134,55 @@ const CultureTranslator = () => {
     }
   }
 
-  const handleNarration = () => {
-    if (!match?.narration || typeof window === 'undefined' || !window.speechSynthesis) return
-    if (narrationRef.current) {
-      window.speechSynthesis.cancel()
-      narrationRef.current = null
+  const handleNarration = async () => {
+    if (!match?.narration) return
+    
+    // Stop any ongoing narration
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current.currentTime = 0
+      audioRef.current = null
       setIsPlaying(false)
       return
     }
-    const utterance = new SpeechSynthesisUtterance(match.narration)
-    utterance.lang = 'en-US'
     
-    // Set female voice
-    const femaleVoice = getFemaleVoice()
-    if (femaleVoice) {
-      utterance.voice = femaleVoice
-    }
-    
-    // Set speech properties for natural female voice
-    utterance.rate = 1.0
-    utterance.pitch = 1.0
-    utterance.volume = 1.0
-    
-    utterance.onend = () => {
-      narrationRef.current = null
+    setIsLoadingAudio(true)
+    setIsPlaying(true)
+    try {
+      // Use English TTS API for high-quality narration
+      const response = await apiClient.post<{ audioUrl: string; success: boolean }>('/english-tts', {
+        text: match.narration,
+        voice: 'nova', // Natural female voice
+      })
+
+      if (response.success && response.audioUrl) {
+        const audio = new Audio(response.audioUrl)
+        audioRef.current = audio
+        
+        audio.onended = () => {
+          audioRef.current = null
+          setIsPlaying(false)
+          setIsLoadingAudio(false)
+        }
+        
+        audio.onerror = () => {
+          audioRef.current = null
+          setIsPlaying(false)
+          setIsLoadingAudio(false)
+        }
+        
+        setIsLoadingAudio(false)
+        await audio.play()
+      } else {
+        setIsLoadingAudio(false)
+        setIsPlaying(false)
+        console.error('TTS API returned unsuccessful response')
+      }
+    } catch (error) {
+      console.error('TTS API error:', error)
+      setIsLoadingAudio(false)
       setIsPlaying(false)
     }
-    narrationRef.current = utterance
-    setIsPlaying(true)
-    window.speechSynthesis.speak(utterance)
   }
 
   return (
@@ -254,10 +275,11 @@ const CultureTranslator = () => {
         >
           <button
             onClick={handleNarration}
-            className="rounded-full border-2 border-cyan-400/50 bg-cyan-400/10 px-6 py-3 text-sm font-semibold text-[#11E0FF] transition hover:border-cyan-400 hover:bg-cyan-400/20"
+            disabled={isLoadingAudio}
+            className="rounded-full border-2 border-cyan-400/50 bg-cyan-400/10 px-6 py-3 text-sm font-semibold text-[#11E0FF] transition hover:border-cyan-400 hover:bg-cyan-400/20 disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ textShadow: '0 0 8px rgba(17, 224, 255, 0.6)' }}
           >
-            {isPlaying ? '⏸ Stop narration' : '▶ Play narration'}
+            {isLoadingAudio ? '⏳ Loading...' : isPlaying ? '⏸ Stop narration' : '▶ Play narration'}
           </button>
         </motion.div>
       )}

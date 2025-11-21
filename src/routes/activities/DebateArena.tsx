@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { ActivityLayout } from '../ActivityLayout'
 import { apiClient } from '../../services/apiClient'
 import { useRecorder } from '../../hooks/useRecorder'
@@ -35,7 +35,9 @@ const DebateArena = () => {
   const [conversation, setConversation] = useState<DebateTurn[]>([])
   const [loading, setLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string>()
-  const [speechEnabled] = useState(true)
+  const [isLoadingAudio, setIsLoadingAudio] = useState(false)
+  const [playingTurnId, setPlayingTurnId] = useState<string | null>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
     const history = readLocalJson<Record<string, DebateTurn[]>>(STORAGE_KEY, {})
@@ -48,21 +50,69 @@ const DebateArena = () => {
     writeLocalJson(STORAGE_KEY, history)
   }, [conversation, prompt])
 
+  const stopSpeech = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current.currentTime = 0
+      audioRef.current = null
+    }
+    setIsLoadingAudio(false)
+    setPlayingTurnId(null)
+  }, [])
+
   const speakText = useCallback(
-    (text: string) => {
-      if (!speechEnabled || typeof window === 'undefined' || !window.speechSynthesis || !text) return
-      const utterance = new SpeechSynthesisUtterance(text)
-      utterance.lang = 'en-US'
-      window.speechSynthesis.cancel()
-      window.speechSynthesis.speak(utterance)
+    async (text: string, turnId?: string) => {
+      if (!text) return
+      
+      // Stop any ongoing speech
+      stopSpeech()
+      
+      setIsLoadingAudio(true)
+      if (turnId) setPlayingTurnId(turnId)
+      
+      try {
+        // Use English TTS API for high-quality speech
+        const response = await apiClient.post<{ audioUrl: string; success: boolean }>('/english-tts', {
+          text: text,
+          voice: 'onyx', // Clear, confident voice for debate
+        })
+
+        if (response.success && response.audioUrl) {
+          const audio = new Audio(response.audioUrl)
+          audioRef.current = audio
+          
+          audio.onended = () => {
+            audioRef.current = null
+            setIsLoadingAudio(false)
+            setPlayingTurnId(null)
+          }
+          
+          audio.onerror = () => {
+            audioRef.current = null
+            setIsLoadingAudio(false)
+            setPlayingTurnId(null)
+          }
+          
+          setIsLoadingAudio(false)
+          await audio.play()
+        } else {
+          setIsLoadingAudio(false)
+          setPlayingTurnId(null)
+          console.error('TTS API returned unsuccessful response')
+        }
+      } catch (error) {
+        console.error('TTS API error:', error)
+        setIsLoadingAudio(false)
+        setPlayingTurnId(null)
+      }
     },
-    [speechEnabled],
+    [stopSpeech],
   )
 
   useEffect(() => {
     if (conversation.length === 0) return
     const lastTurn = conversation[conversation.length - 1]
-    speakText(lastTurn.rebuttal)
+    speakText(lastTurn.rebuttal, lastTurn.id)
   }, [conversation, speakText])
 
   const randomizePrompt = () => {
@@ -176,17 +226,27 @@ const DebateArena = () => {
                 <div className="rounded-lg border border-white/10 bg-white/5 p-2">
                   <p className="text-xs uppercase tracking-[0.4em] text-[#11E0FF]">AI rebuttal</p>
                   <p className="mt-1 text-sm">{turn.rebuttal}</p>
-                  <div className="mt-3 flex gap-2">
+                  <div className="mt-3 flex gap-2 flex-wrap">
                     <button
-                      onClick={() => speakText(turn.rebuttal)}
-                      className="rounded-full border border-white/30 px-3 py-1 text-xs text-white/70 hover:border-white"
+                      onClick={() => speakText(turn.rebuttal, turn.id)}
+                      disabled={isLoadingAudio && playingTurnId === turn.id}
+                      className="rounded-full border border-white/30 px-3 py-1.5 text-xs text-white/70 hover:border-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition"
                     >
-                      🔊 Replay AI audio
+                      {isLoadingAudio && playingTurnId === turn.id ? '⏳ Loading...' : '🔊 Replay AI audio'}
                     </button>
+                    {playingTurnId === turn.id && (
+                      <button
+                        onClick={stopSpeech}
+                        className="rounded-full border-2 border-rose-500/70 bg-rose-500/20 px-3 py-1.5 text-xs font-semibold text-rose-300 hover:border-rose-500 hover:bg-rose-500/30 transition active:scale-95"
+                        style={{ textShadow: '0 0 6px rgba(244, 63, 94, 0.6)' }}
+                      >
+                        ⏹ Stop audio
+                      </button>
+                    )}
                     {!isRecording && !loading && (
                       <button
                         onClick={startRecording}
-                        className="rounded-full border-2 border-[#11E0FF]/50 bg-[#11E0FF]/10 px-3 py-1 text-xs font-semibold text-[#11E0FF] hover:bg-[#11E0FF]/20 hover:shadow-[0_0_10px_rgba(17,224,255,0.4)] transition"
+                        className="rounded-full border-2 border-[#11E0FF]/50 bg-[#11E0FF]/10 px-3 py-1.5 text-xs font-semibold text-[#11E0FF] hover:bg-[#11E0FF]/20 hover:shadow-[0_0_10px_rgba(17,224,255,0.4)] transition"
                       style={{ textShadow: '0 0 4px rgba(17, 224, 255, 0.5)' }}
                       >
                         💬 Reply
