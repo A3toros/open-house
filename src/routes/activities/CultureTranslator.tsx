@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ActivityLayout } from '../ActivityLayout'
 import { apiClient } from '../../services/apiClient'
 import { useRecorder } from '../../hooks/useRecorder'
@@ -31,26 +31,6 @@ const CultureTranslator = () => {
   const [transcript, setTranscript] = useState<string>()
   const [isLoadingAudio, setIsLoadingAudio] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
-
-  // Get a female voice from available voices (kept for potential fallback, but not used with API TTS)
-  const getFemaleVoice = useCallback(() => {
-    if (typeof window === 'undefined' || !window.speechSynthesis) return null
-    const availableVoices = window.speechSynthesis.getVoices()
-    // Try to find a female voice (common patterns: 'female', 'woman', or specific voice names)
-    const femaleVoice = availableVoices.find(
-      (voice) =>
-        voice.name.toLowerCase().includes('female') ||
-        voice.name.toLowerCase().includes('woman') ||
-        voice.name.toLowerCase().includes('zira') || // Windows female voice
-        voice.name.toLowerCase().includes('samantha') || // macOS female voice
-        voice.name.toLowerCase().includes('karen') || // macOS female voice
-        voice.name.toLowerCase().includes('susan') || // macOS female voice
-        voice.name.toLowerCase().includes('victoria') || // macOS female voice
-        voice.name.toLowerCase().includes('salli') || // AWS Polly female voice
-        voice.name.toLowerCase().includes('joanna'), // AWS Polly female voice
-    )
-    return femaleVoice || availableVoices.find((v) => v.lang.startsWith('en')) || availableVoices[0]
-  }, [])
 
   useEffect(() => {
     const cached = readLocalJson(HISTORY_KEY, [])
