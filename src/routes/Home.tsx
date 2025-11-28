@@ -3,6 +3,8 @@ import { motion } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
 import { activities } from './activities/activityList'
 import ActivityCarousel from '../components/home/ActivityCarousel'
+import { StarsBackground } from '../components/ui/stars-background'
+import { ShootingStars } from '../components/ui/shooting-stars'
 
 const Home = () => {
   const bannerRef = useRef<HTMLDivElement>(null)
@@ -127,9 +129,28 @@ const Home = () => {
   }, [])
 
   return (
-    <main className="min-h-screen text-white">
+    <main className="min-h-screen text-white relative">
+      {/* Stars Background */}
+      <StarsBackground 
+        starDensity={0.00015}
+        allStarsTwinkle={true}
+        twinkleProbability={0.7}
+        minTwinkleSpeed={0.5}
+        maxTwinkleSpeed={1}
+      />
+      <ShootingStars
+        minSpeed={10}
+        maxSpeed={30}
+        minDelay={1000}
+        maxDelay={5000}
+        starColor="#11E0FF"
+        trailColor="#2EB9DF"
+        starWidth={10}
+        starHeight={1}
+      />
+      
       {/* Banner Section */}
-      <div ref={bannerRef} className="relative w-full h-[60vh] min-h-[400px] max-h-[600px]">
+      <div ref={bannerRef} className="relative w-full h-[60vh] min-h-[400px] max-h-[600px] z-10">
         <img
           src="/pics/Banner.webp"
           alt="Banner"
@@ -208,8 +229,8 @@ const Home = () => {
       </div>
 
       {/* Content Section */}
-      <div className="px-6 py-10 md:px-12 lg:px-20">
-        <div className="mx-auto max-w-6xl space-y-12 rounded-3xl bg-[#1C2340] p-8 shadow-[0_0_40px_rgba(17,224,255,0.15)] border border-[#11E0FF]/20">
+      <div className="px-6 py-10 md:px-12 lg:px-20 relative z-10">
+        <div className="mx-auto max-w-6xl space-y-12 rounded-3xl bg-[#1C2340] p-8 shadow-[0_0_40px_rgba(17,224,255,0.15)] border border-[#11E0FF]/20 relative z-10">
 
         <section className="space-y-8">
           <ActivityCarousel items={activities} />
@@ -232,9 +253,6 @@ const Home = () => {
                 >
                   <h3 className="font-display text-xl text-white">{activity.title}</h3>
                   <p className="mt-2 text-sm text-white/70">{activity.description}</p>
-                  <div className="mt-4 text-xs text-white/70">
-                    <span>React screen ready</span>
-                  </div>
                 </motion.article>
               </Link>
             ))}
