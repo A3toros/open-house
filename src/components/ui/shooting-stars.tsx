@@ -19,7 +19,7 @@ export const ShootingStars = ({
   maxDelay = 5000,
   starColor = '#9E00FF',
   trailColor = '#2EB9DF',
-  starWidth = 10,
+  starWidth: _starWidth = 10,
   starHeight = 1,
   className = '',
 }: ShootingStarsProps) => {
@@ -76,7 +76,7 @@ export const ShootingStars = ({
       setShootingStar(newStar)
     }
 
-    let timeoutId: NodeJS.Timeout
+    let timeoutId: number
     let animationFrameId: number
 
     const scheduleNext = () => {
