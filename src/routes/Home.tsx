@@ -5,11 +5,13 @@ import { activities } from './activities/activityList'
 import ActivityCarousel from '../components/home/ActivityCarousel'
 import { StarsBackground } from '../components/ui/stars-background'
 import { ShootingStars } from '../components/ui/shooting-stars'
+import { PresentationModal } from '../components/presentation/PresentationModal'
 
 const Home = () => {
   const bannerRef = useRef<HTMLDivElement>(null)
   const textRef = useRef<HTMLParagraphElement>(null)
   const [textTop, setTextTop] = useState(48) // Start at topPadding
+  const [showPresentation, setShowPresentation] = useState(false)
 
   useEffect(() => {
     let rafId: number | null = null
@@ -236,6 +238,32 @@ const Home = () => {
           <ActivityCarousel items={activities} />
         </section>
 
+        {/* Presentation Button */}
+        <section className="flex justify-center">
+          <motion.button
+            onClick={() => setShowPresentation(true)}
+            className="w-full max-w-md py-4 px-6 rounded-xl bg-[#1E2A49] border border-[#11E0FF]/30 hover:border-[#11E0FF]/60 hover:bg-[#1E2A49]/80 transition-all duration-300 hover:shadow-[0_0_20px_rgba(17,224,255,0.3)]"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <span className="text-lg font-semibold text-white flex items-center justify-center gap-2">
+              <svg
+                className="w-6 h-6 text-[#11E0FF]"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Watch Presentation
+            </span>
+          </motion.button>
+        </section>
+
         <section className="space-y-6">
           <h2 className="font-display text-2xl text-white">All activities</h2>
           <div className="grid gap-6 md:grid-cols-2">
@@ -264,6 +292,9 @@ const Home = () => {
         </footer>
         </div>
       </div>
+
+      {/* Presentation Modal */}
+      <PresentationModal isOpen={showPresentation} onClose={() => setShowPresentation(false)} />
     </main>
   )
 }
