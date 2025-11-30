@@ -54,6 +54,8 @@ const FutureProfession = () => {
   const [email, setEmail] = useState('')
   const [isSendingEmail, setIsSendingEmail] = useState(false)
   const [emailStatus, setEmailStatus] = useState<string>()
+  const [availableCameras, setAvailableCameras] = useState<MediaDeviceInfo[]>([])
+  const [selectedCameraId, setSelectedCameraId] = useState<string>('')
 
   const clearTimers = () => {
     timers.current.forEach((id) => window.clearTimeout(id))
@@ -116,10 +118,41 @@ const FutureProfession = () => {
   }, [analysis?.profession_en])
 
   // Camera helpers
+  const enumerateCameras = async () => {
+    try {
+      // Request permission first to get device labels
+      const tempStream = await navigator.mediaDevices.getUserMedia({ video: true })
+      // Stop the temporary stream immediately
+      tempStream.getTracks().forEach((track) => track.stop())
+      
+      const devices = await navigator.mediaDevices.enumerateDevices()
+      const videoDevices = devices.filter((device) => device.kind === 'videoinput')
+      setAvailableCameras(videoDevices)
+      if (videoDevices.length > 0 && !selectedCameraId) {
+        setSelectedCameraId(videoDevices[0].deviceId)
+      }
+    } catch (error) {
+      console.error('Error enumerating cameras:', error)
+    }
+  }
+
   const startCamera = async () => {
     try {
       setCameraError(undefined)
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 } })
+      // Stop existing stream if any
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop())
+      }
+      
+      const constraints: MediaStreamConstraints = {
+        video: {
+          width: 1280,
+          height: 720,
+          ...(selectedCameraId ? { deviceId: { exact: selectedCameraId } } : {}),
+        },
+      }
+      
+      const stream = await navigator.mediaDevices.getUserMedia(constraints)
       streamRef.current = stream
       if (videoRef.current) {
         videoRef.current.srcObject = stream
@@ -130,6 +163,10 @@ const FutureProfession = () => {
       setCameraError((error as Error).message)
     }
   }
+
+  useEffect(() => {
+    enumerateCameras()
+  }, [])
 
   const captureFrame = () => {
     if (!videoRef.current) return
@@ -217,7 +254,7 @@ const FutureProfession = () => {
   return (
     <ActivityLayout
       title="Future Profession"
-      subtitle="Record a bilingual self-intro, get an AI profession prediction, then generate a portrait with that role."
+      subtitle="Record a self-intro, get an AI profession prediction, then generate a portrait with that role."
     >
       <div className="space-y-6 rounded-3xl border border-[#11E0FF]/30 bg-[#1E2A49] p-6">
         {/* Voice Challenge Section */}
@@ -326,6 +363,28 @@ const FutureProfession = () => {
           <div className="grid gap-6 md:grid-cols-[3fr,2fr]">
             <div className="space-y-3">
               <p className="text-sm text-white/70">Live camera preview</p>
+              {availableCameras.length > 0 && (
+                <div className="space-y-2">
+                  <label className="text-xs text-white/60 block">Select Camera</label>
+                  <select
+                    value={selectedCameraId}
+                    onChange={(e) => {
+                      setSelectedCameraId(e.target.value)
+                      setCameraReady(false)
+                      if (streamRef.current) {
+                        streamRef.current.getTracks().forEach((track) => track.stop())
+                      }
+                    }}
+                    className="w-full rounded-xl border border-[#11E0FF]/30 bg-[#1E2A49] px-3 py-2 text-sm text-white focus:border-[#11E0FF] focus:outline-none focus:ring-2 focus:ring-[#11E0FF]/20"
+                  >
+                    {availableCameras.map((camera) => (
+                      <option key={camera.deviceId} value={camera.deviceId}>
+                        {camera.label || `Camera ${camera.deviceId.slice(0, 8)}`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div className="rounded-2xl border border-white/10 bg-black/40 p-3">
                 <video ref={videoRef} className="h-60 w-full rounded-xl bg-black object-cover" playsInline muted />
                 <div className="mt-3 flex flex-wrap gap-3">

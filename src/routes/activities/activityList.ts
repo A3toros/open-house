@@ -12,7 +12,7 @@ export const activities = [
   {
     slug: 'future-profession',
     title: 'Future Profession',
-    description: 'Record a bilingual intro to get an AI career prediction and generate a matching portrait.',
+    description: 'Record a self-intro to get an AI career prediction and generate a matching portrait.',
     component: FutureProfession,
   },
   {
