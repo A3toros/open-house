@@ -1,17 +1,18 @@
-const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args))
+const nodemailer = require('nodemailer')
 const { ok, badRequest, serverError } = require('./response')
 const { logEvent } = require('./db')
 
-const RESEND_API_KEY = process.env.RESEND_API_KEY
-const RESEND_FROM = process.env.RESEND_FROM || 'open-house@school.ai'
+const GMAIL_USER = process.env.GMAIL_USER
+const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD
+const GMAIL_FROM_NAME = process.env.GMAIL_FROM_NAME || 'EP Open House'
 
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return ok()
   if (event.httpMethod !== 'POST') return badRequest('Use POST')
 
   try {
-    if (!RESEND_API_KEY) {
-      return badRequest('RESEND_API_KEY is not configured')
+    if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
+      return badRequest('GMAIL_USER and GMAIL_APP_PASSWORD are required')
     }
 
     const body = JSON.parse(event.body || '{}')
@@ -20,6 +21,25 @@ exports.handler = async (event) => {
     if (!email || !styledImageUrl) {
       return badRequest('email and styledImageUrl are required')
     }
+
+    // Create Gmail transporter
+    // Remove any spaces from app password (Google app passwords don't have spaces)
+    const cleanAppPassword = GMAIL_APP_PASSWORD.replace(/\s+/g, '')
+    
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: GMAIL_USER.trim(),
+        pass: cleanAppPassword,
+      },
+    })
+    
+    // Verify transporter configuration
+    console.log('[send-photo-email] Gmail config:', {
+      user: GMAIL_USER.trim(),
+      passwordLength: cleanAppPassword.length,
+      passwordPreview: cleanAppPassword.substring(0, 4) + '...',
+    })
 
     // Escape HTML to prevent XSS
     const escapeHtml = (text) => {
@@ -146,39 +166,46 @@ exports.handler = async (event) => {
 </html>
     `
 
-    // Prepare email payload
-    const emailPayload = {
-      from: RESEND_FROM,
+    // Update HTML to use attachment CID for inline image
+    let htmlWithImage = html
+    if (imageCid) {
+      // Replace the attachment notice section with the actual inline image
+      const imageSection = `
+    <!-- Image -->
+    <div style="text-align: center; margin-bottom: 40px;">
+      <img src="cid:${imageCid}" alt="Portrait" style="max-width: 100%; max-height: 600px; height: auto; border-radius: 12px; border: 2px solid ${accentColor}; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);" />
+    </div>
+`
+      // Replace the "Image Notice" section with the actual image
+      htmlWithImage = html.replace(
+        /<!-- Image Notice -->[\s\S]*?<\/div>/,
+        imageSection
+      )
+    }
+
+    // Prepare email options for nodemailer
+    const mailOptions = {
+      from: `${GMAIL_FROM_NAME} <${GMAIL_USER}>`,
       to: email,
       subject: emailSubject,
-      html,
+      html: htmlWithImage,
     }
 
     // Add attachment if we have image buffer
     if (imageBuffer && imageCid) {
-      emailPayload.attachments = [
+      mailOptions.attachments = [
         {
           filename: 'future-portrait.png',
-          content: imageBuffer.toString('base64'),
+          content: imageBuffer,
           cid: imageCid, // Content ID for inline image
         },
       ]
       console.log('[send-photo-email] Added image as attachment with CID:', imageCid)
     }
 
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(emailPayload),
-    })
-
-    if (!response.ok) {
-      const errText = await response.text()
-      throw new Error(`Email provider error: ${errText}`)
-    }
+    // Send email using Gmail SMTP
+    const info = await transporter.sendMail(mailOptions)
+    console.log('[send-photo-email] Email sent successfully:', info.messageId)
 
     await logEvent(sessionId, 'photo-booth', 'email-sent', { email })
 

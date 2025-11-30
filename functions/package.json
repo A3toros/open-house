@@ -5,6 +5,7 @@
     "@tsparticles/plugin-emitters": "^3.9.1",
     "@tsparticles/updater-life": "^3.9.1",
     "@tsparticles/updater-rotate": "^3.9.1",
+    "nodemailer": "^6.10.1",
     "tsparticles": "^3.9.1",
     "tsparticles-slim": "^2.12.0"
   }

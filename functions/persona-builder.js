@@ -42,7 +42,36 @@ Return JSON with keys: name, description, greeting, conversationStyle.`,
     let persona
     try {
       persona = typeof content === 'string' ? JSON.parse(content) : content
-    } catch {
+      
+      // Helper function to safely extract string value, handling objects
+      const safeString = (value, fallback) => {
+        if (typeof value === 'string') {
+          // If it looks like a JSON object string, use fallback instead
+          const trimmed = value.trim()
+          if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+            return fallback
+          }
+          return value
+        }
+        if (typeof value === 'object' && value !== null) {
+          // If it's an object like {tone, vocabulary, sentences}, ignore it and use fallback
+          // Don't stringify objects - they're not meant to be displayed
+          return fallback
+        }
+        return String(value || fallback)
+      }
+      
+      // Ensure all persona properties are strings, not objects
+      // Sometimes AI returns unexpected structures like {tone, vocabulary, sentences}
+      // Filter these out and use proper fallbacks
+      persona = {
+        name: safeString(persona?.name, 'Nova'),
+        description: safeString(persona?.description, 'A friendly AI friend who loves learning and fun stories.'),
+        greeting: safeString(persona?.greeting, 'Hi! Ready for a fun adventure?'),
+        conversationStyle: safeString(persona?.conversationStyle, 'Use simple words. Ask short questions. Be happy and encouraging. Talk like you\'re talking to a 10-year-old friend.'),
+      }
+    } catch (error) {
+      console.error('Error parsing persona response:', error, 'Content:', content)
       persona = {
         name: 'Nova',
         description: 'A friendly AI friend who loves learning and fun stories.',

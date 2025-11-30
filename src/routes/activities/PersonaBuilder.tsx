@@ -124,15 +124,27 @@ const PersonaBuilder = () => {
         },
       )
       setPersonaId(response.personaId)
-      setGeneratedPersona(response.persona)
+      
+      // Ensure all persona properties are strings, not objects
+      const persona = response.persona
+      const safePersona = {
+        name: typeof persona?.name === 'string' ? persona.name : String(persona?.name || 'AI Friend'),
+        description: typeof persona?.description === 'string' ? persona.description : String(persona?.description || 'A friendly AI companion.'),
+        greeting: typeof persona?.greeting === 'string' ? persona.greeting : String(persona?.greeting || 'Hi! I am ready to chat about your goals.'),
+        conversationStyle: typeof persona?.conversationStyle === 'string' ? persona.conversationStyle : String(persona?.conversationStyle || 'Friendly and encouraging.'),
+      }
+      
+      setGeneratedPersona(safePersona)
       setChatLog([
         {
           from: 'ai',
-          text: response.persona?.greeting || 'Hi! I am ready to chat about your goals.',
+          text: safePersona.greeting,
         },
       ])
     } catch (error) {
-      setErrorMessage((error as Error).message)
+      // Ensure error message is always a string
+      const errorMsg = error instanceof Error ? error.message : typeof error === 'string' ? error : JSON.stringify(error)
+      setErrorMessage(errorMsg)
     } finally {
       setIsGenerating(false)
     }
@@ -164,9 +176,13 @@ const PersonaBuilder = () => {
           personaId,
           message: userMessage,
         })
-        setChatLog((prev) => [...prev, { from: 'ai', text: response.reply }])
+        // Ensure reply is always a string, not an object
+        const replyText = typeof response.reply === 'string' ? response.reply : JSON.stringify(response.reply)
+        setChatLog((prev) => [...prev, { from: 'ai', text: replyText }])
       } catch (error) {
-        setErrorMessage((error as Error).message)
+        // Ensure error message is always a string
+        const errorMsg = error instanceof Error ? error.message : typeof error === 'string' ? error : JSON.stringify(error)
+        setErrorMessage(errorMsg)
       } finally {
         setIsTranscribing(false)
         setIsSending(false)
@@ -175,7 +191,9 @@ const PersonaBuilder = () => {
       try {
         await startRecording()
       } catch (error) {
-        setErrorMessage((error as Error).message)
+        // Ensure error message is always a string
+        const errorMsg = error instanceof Error ? error.message : typeof error === 'string' ? error : JSON.stringify(error)
+        setErrorMessage(errorMsg)
       }
     }
   }
@@ -196,9 +214,13 @@ const PersonaBuilder = () => {
         personaId,
         message: userMessage,
       })
-      setChatLog((prev) => [...prev, { from: 'ai', text: response.reply }])
+      // Ensure reply is always a string, not an object
+      const replyText = typeof response.reply === 'string' ? response.reply : JSON.stringify(response.reply)
+      setChatLog((prev) => [...prev, { from: 'ai', text: replyText }])
     } catch (error) {
-      setErrorMessage((error as Error).message)
+      // Ensure error message is always a string
+      const errorMsg = error instanceof Error ? error.message : typeof error === 'string' ? error : JSON.stringify(error)
+      setErrorMessage(errorMsg)
     } finally {
       setIsSending(false)
     }
@@ -213,9 +235,13 @@ const PersonaBuilder = () => {
         personaId,
         message: 'Continue',
       })
-      setChatLog((prev) => [...prev, { from: 'ai', text: response.reply }])
+      // Ensure reply is always a string, not an object
+      const replyText = typeof response.reply === 'string' ? response.reply : JSON.stringify(response.reply)
+      setChatLog((prev) => [...prev, { from: 'ai', text: replyText }])
     } catch (error) {
-      setErrorMessage((error as Error).message)
+      // Ensure error message is always a string
+      const errorMsg = error instanceof Error ? error.message : typeof error === 'string' ? error : JSON.stringify(error)
+      setErrorMessage(errorMsg)
     } finally {
       setIsSending(false)
     }
@@ -456,7 +482,7 @@ const PersonaBuilder = () => {
             <p className="text-xs uppercase tracking-[0.4em] text-[#11E0FF]">Persona blueprint</p>
             <p className="text-lg text-white">{generatedPersona.name}</p>
             <p>{generatedPersona.description}</p>
-            <p className="mt-2 text-xs text-white/60">{generatedPersona.conversationStyle}</p>
+            {/* Don't show conversationStyle - it's just technical details */}
           </div>
         )}
         <motion.div className="rounded-2xl border border-[#11E0FF]/20 bg-[#1E2A49] p-4" layout>
